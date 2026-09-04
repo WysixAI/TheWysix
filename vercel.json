@@ -5,18 +5,7 @@
   "framework": "vite",
   "functions": {
     "server.cjs": {
-      "runtime": "nodejs20.x",
-      "memory": 1024,
-      "maxDuration": 60
+      "runtime": "nodejs20.x"
     }
-  },
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/server.cjs"
-    }
-  ],
-  "env": {
-    "NODE_ENV": "production"
   }
 }
