@@ -1,0 +1,6 @@
+{
+  "name": "KitekBot",
+  "description": "Prosta strona KitekBot z animowanym nagłówkiem i panelem bocznym.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
