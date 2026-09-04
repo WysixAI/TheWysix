@@ -2,7 +2,8 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "installCommand": "npm install",
-  "serverless": {
-    "isr": 0
+  "api": {
+    "builder": "@vercel/node",
+    "src": "dist/server.cjs"
   }
 }
