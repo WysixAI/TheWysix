@@ -2,30 +2,10 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "installCommand": "npm install",
-  "functions": {
-    "api/index.js": {
-      "maxDuration": 30
-    },
-    "api/auth/callback.js": {
-      "maxDuration": 30
-    }
-  },
   "rewrites": [
-    {
-      "source": "/auth/callback",
-      "destination": "/api"
-    },
-    {
-      "source": "/auth/callback/",
-      "destination": "/api"
-    },
-    {
-      "source": "/api/(.*)",
-      "destination": "/api"
-    },
-    {
-      "source": "/((?!api|auth/callback).*)",
-      "destination": "/index.html"
-    }
+    { "source": "/auth/callback", "destination": "/api" },
+    { "source": "/auth/callback/", "destination": "/api" },
+    { "source": "/api/(.*)", "destination": "/api" },
+    { "source": "/((?!api|auth).*)", "destination": "/index.html" }
   ]
 }

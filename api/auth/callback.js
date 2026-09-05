@@ -931,7 +931,12 @@ app.get("/api", (req, res, next) => {
   res.json({ status: "ok", name: "KitekBot API" });
 });
 var serverApp_default = app;
+
+// src/authCallbackEntry.ts
+function handler(req, res) {
+  return serverApp_default(req, res);
+}
 export {
-  app,
-  serverApp_default as default
+  serverApp_default as app,
+  handler as default
 };

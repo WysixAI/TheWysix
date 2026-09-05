@@ -12,10 +12,22 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
+    version: "v3.9.0",
+    date: "Dzisiaj, 05.09.2026",
+    badge: "NAJNOWSZA (v3.9.0)",
+    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Zunifikowano architekturę API Vercel do jednego czystego endpointu api/index.js",
+      "Skrócono build script w package.json do vite build oraz esbuild src/serverApp.ts -> api/index.js",
+      "Uproszczono vercel.json — usunięto sekcję functions, przekierowując /auth/callback i /api/* do /api",
+      "Wyeliminowano wszystkie osobne pliki z folderu api/, zapobiegając jakimkolwiek kolizjom i błędom"
+    ]
+  },
+  {
     version: "v3.8.0",
     date: "Dzisiaj, 05.09.2026",
-    badge: "NAJNOWSZA (v3.8.0)",
-    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    badge: "STABILNA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Przeniesiono definicję handlera do src/api/authCallback.ts poza strukturę folderu api/",
       "Skonfigurowano bundlowanie esbuild bezpośrednio z src/api/authCallback.ts do api/auth/callback.js",
