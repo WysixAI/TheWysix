@@ -12,10 +12,33 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
+    version: "v3.4.0",
+    date: "Dzisiaj, 05.09.2026",
+    badge: "NAJNOWSZA (v3.4.0)",
+    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Zaimplementowano dedykowany handler Vercel Serverless Function `handler(req, res)` z typami @vercel/node",
+      "Dodano jawną sekcję `functions` w vercel.json z konfiguracją api/index.js oraz maxDuration: 30",
+      "Zainstalowano oficjalną zależność @vercel/node i przetestowano lokalną symulację bezserwerowego handlera",
+      "Zweryfikowano brak obecności katalogu api/ w plikach .vercelignore i .gitignore"
+    ]
+  },
+  {
+    version: "v3.3.0",
+    date: "Dzisiaj, 05.09.2026",
+    badge: "STABILNA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
+    changes: [
+      "Zaktualizowano skrypt budowania i plik api/index.js w repozytorium GitHub",
+      "Dodano precyzyjne eksporty nazwane i domyślne w src/apiEntry.ts dla środowiska Vercel Serverless",
+      "Pełne zabezpieczenie przed awariami importów i cykli życia bezserwerowego Express"
+    ]
+  },
+  {
     version: "v3.2.0",
     date: "Dzisiaj, 05.09.2026",
-    badge: "NAJNOWSZA (v3.2.0)",
-    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    badge: "STABILNA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Wyeliminowano błąd 500 FUNCTION_INVOCATION_FAILED na Vercel spowodowany wywołaniem app.listen() i importem vite w środowisku bezserwerowym",
       "Wprowadzono pełną separację architektury aplikacji: czysty moduł Express (src/serverApp.ts) oraz odrębny dedykowany punkt Serverless (src/apiEntry.ts)",
