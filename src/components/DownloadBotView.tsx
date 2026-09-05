@@ -12,10 +12,22 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
+    version: "v2.9.0",
+    date: "Dzisiaj, 05.09.2026",
+    badge: "NAJNOWSZA (v2.9.0)",
+    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Wdrożono natywny bezserwerowy eksport Express dla środowiska Vercel (eliminacja przedwczesnego zamykania wywołań asynchronicznych)",
+      "Utworzono dedykowane punkty wejścia Serverless: /api/auth/callback.ts, /api/[...slug].ts oraz /api/index.ts",
+      "Zoptymalizowano reguły routingu rewrites w vercel.json dla bezbłędnej obsługi OAuth oraz API",
+      "Usunięto przestarzałą definicję @types/jszip i zoptymalizowano proces instalacji pakietów"
+    ]
+  },
+  {
     version: "v2.8.0",
     date: "Dzisiaj, 05.09.2026",
-    badge: "NAJNOWSZA (v2.8.0)",
-    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    badge: "STABILNA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Naprawiono krytyczny błąd Vercel 500 FUNCTION_INVOCATION_FAILED (read-only filesystem EROFS w środowiskach AWS Lambda)",
       "Dodano bezpieczny silnik pamięci podręcznej in-memory dla konfiguracji serwerów z obsługą katalogu /tmp na platformach serverless",
