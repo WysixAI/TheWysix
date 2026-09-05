@@ -5,11 +5,15 @@
   "rewrites": [
     {
       "source": "/auth/callback",
-      "destination": "/api/auth/callback"
+      "destination": "/api"
     },
     {
       "source": "/auth/callback/",
-      "destination": "/api/auth/callback"
+      "destination": "/api"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/api"
     },
     {
       "source": "/((?!api|auth/callback).*)",

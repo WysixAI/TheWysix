@@ -12,10 +12,22 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
+    version: "v3.1.0",
+    date: "Dzisiaj, 05.09.2026",
+    badge: "NAJNOWSZA (v3.1.0)",
+    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Wyeliminowano błąd 'Cannot find module /var/task/server' poprzez wygenerowanie samowystarczalnego bundla ESM w /api/index.js",
+      "Scentralizowano obsługę Serverless Functions do pojedynczego punktu wejścia /api i usunięto problematyczne podkatalogi /api/auth",
+      "Zaktualizowano reguły rewrites w vercel.json dla bezbłędnego przekazywania /auth/callback oraz /api/*",
+      "Zautomatyzowano generowanie gotowego do użycia api/index.js podczas każdego wywołania npm run build"
+    ]
+  },
+  {
     version: "v3.0.0",
     date: "Dzisiaj, 05.09.2026",
-    badge: "NAJNOWSZA (v3.0.0)",
-    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    badge: "STABILNA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Naprawiono błąd 'Unexpected token <, <!doctype ... is not valid JSON' poprzez wykluczenie ścieżek /api/ z reguły SPA fallback w vercel.json",
       "Dodano bezpieczne parsowanie odpowiedzi fetch() we wszystkich komponentach (ochrona przed awarią przy odpowiedziach HTML/proxy)",

@@ -995,3 +995,5 @@ async function startServer() {
 if (!isServerlessEnv) {
   startServer();
 }
+
+export default app;
