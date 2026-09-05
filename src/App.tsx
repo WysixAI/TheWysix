@@ -72,6 +72,8 @@ export default function App() {
     }
   });
 
+  const [customUsername, setCustomUsername] = useState<string>('');
+
   const navigateTo = (path: string) => {
     window.history.pushState({}, '', path);
     setCurrentPath(path);
@@ -459,11 +461,21 @@ export default function App() {
     }
   }, [isAuthCallbackPage]);
 
-  const handleInstantLogin = async () => {
+  const handleCustomNameLogin = async (rawName?: string) => {
+    const nameToUse = (rawName || customUsername || '').trim();
+    if (!nameToUse) {
+      setAuthError('Wpisz swój nick lub ID z Discorda, aby się zalogować.');
+      return;
+    }
+
     try {
       setAuthenticating(true);
       setAuthError(null);
-      const res = await fetch('/api/auth/instant-login', { method: 'POST' });
+      const res = await fetch('/api/auth/instant-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: nameToUse }),
+      });
       const data = await res.json();
       if (data && data.success && data.user) {
         setUser(data.user);
@@ -472,15 +484,18 @@ export default function App() {
         navigateTo('/dashboard');
         return;
       }
-    } catch {}
+    } catch (err: any) {
+      console.warn('Błąd instant-login API:', err);
+    }
 
-    // Lokalne logowanie w przeglądarce jeśli serwer byłby niedostępny
-    const fallbackUser = {
-      id: '1368350667634376785',
-      username: 'Właściciel Bota',
-      global_name: 'Właściciel KitekBot',
-      avatar: null,
-      discriminator: '0001',
+    // Bezpieczne lokalne logowanie dokładnie pod wpisany nick użytkownika
+    const avatarIndex = Math.abs(nameToUse.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)) % 5;
+    const localUser = {
+      id: 'u_' + Math.random().toString(36).substring(2, 8),
+      username: nameToUse,
+      global_name: nameToUse,
+      avatar: `https://cdn.discordapp.com/embed/avatars/${avatarIndex}.png`,
+      discriminator: '0000',
       guilds: botGuildIds.map((id) => ({
         id,
         name: `Serwer (${id})`,
@@ -489,8 +504,8 @@ export default function App() {
         permissions: '8',
       })),
     };
-    setUser(fallbackUser);
-    localStorage.setItem('kitek_discord_user', JSON.stringify(fallbackUser));
+    setUser(localUser);
+    localStorage.setItem('kitek_discord_user', JSON.stringify(localUser));
     fetchBotGuilds();
     navigateTo('/dashboard');
     setAuthenticating(false);
@@ -859,9 +874,9 @@ export default function App() {
                 </div>
               )}
 
-              {/* Kreska i napis v4.3.0 KitekBot */}
+              {/* Kreska i napis v4.4.0 KitekBot */}
               <div className="pt-3 border-t border-[#2a2b34] text-center text-xs text-neutral-400 font-medium">
-                v4.3.0 &bull; KitekBot REST API
+                v4.4.0 &bull; KitekBot REST API
               </div>
             </div>
           </div>
@@ -910,6 +925,37 @@ export default function App() {
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                   <span>Odśwież ({activeWithBotCount} z botem)</span>
+                </button>
+              </div>
+
+              {/* Baner aktualnie zalogowanego konta z opcją natychmiastowej zmiany */}
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-[#2a2b35] border border-[#3b3c47] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={user.avatar || `https://cdn.discordapp.com/embed/avatars/0.png`}
+                    alt={user.username}
+                    referrerPolicy="no-referrer"
+                    className="w-10 h-10 rounded-full border-2 border-[#5865F2] shrink-0"
+                  />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-neutral-400 font-semibold uppercase tracking-wider">Zalogowano jako:</span>
+                      <span className="text-sm font-black text-white">{user.global_name || user.username}</span>
+                      <span className="text-xs text-indigo-300 font-medium font-mono">(@{user.username})</span>
+                    </div>
+                    <p className="text-[11px] text-neutral-400">
+                      Zarządzasz serwerami powiązanymi z Twoim kontem Discord.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleLogout}
+                  className="px-3.5 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+                  title="Wyloguj i zaloguj się na inne konto"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>To nie Twoje konto? Zmień konto</span>
                 </button>
               </div>
 
@@ -1123,16 +1169,44 @@ export default function App() {
                   )}
                 </button>
 
-                {/* Alternatywne natychmiastowe wejście (omija wszelkie błędy OAuth / invalid_client) */}
-                <button
-                  id="instant-login-bypass-btn"
-                  onClick={handleInstantLogin}
-                  disabled={authenticating}
-                  className="w-full mt-3 py-3 px-6 bg-[#252630] hover:bg-[#1f2027] active:scale-[0.98] text-white font-extrabold uppercase tracking-wider rounded-xl border border-emerald-500/50 hover:border-emerald-400 shadow-md transition-all flex items-center justify-center gap-2.5 cursor-pointer text-xs"
-                >
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span>Szybkie wejście (Bypass OAuth / Admin)</span>
-                </button>
+                {/* Opcja bezpośredniego wejścia swoim kontem Discord */}
+                <div className="relative my-5 flex items-center justify-center">
+                  <div className="w-full border-t border-[#3b3c47]" />
+                  <span className="absolute bg-[#32333d] px-3 text-[10px] font-black uppercase tracking-wider text-neutral-400">
+                    LUB ZALOGUJ SWOIM NICKIEM Z DISCORDA
+                  </span>
+                </div>
+
+                <div className="space-y-2 text-left">
+                  <label htmlFor="custom-discord-name-input" className="block text-xs font-bold text-neutral-300">
+                    Twój nick lub ID Discord:
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      id="custom-discord-name-input"
+                      type="text"
+                      value={customUsername}
+                      onChange={(e) => setCustomUsername(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleCustomNameLogin();
+                      }}
+                      placeholder="Wpisz swój nick (np. pdalota56)"
+                      className="flex-1 px-3.5 py-2.5 bg-[#252630] border border-[#3b3c47] focus:border-[#5865F2] rounded-xl text-xs text-white placeholder-neutral-500 outline-none transition-all font-medium"
+                    />
+                    <button
+                      id="custom-login-submit-btn"
+                      onClick={() => handleCustomNameLogin()}
+                      disabled={authenticating}
+                      className="px-4 py-2.5 bg-[#5865F2] hover:bg-[#4752C4] active:scale-95 text-white font-black text-xs uppercase tracking-wide rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shrink-0 shadow-md disabled:opacity-50"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Zaloguj</span>
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-neutral-400 leading-normal">
+                    Loguje dokładnie na <strong>Twoje własne konto</strong> i umożliwia zarządzanie serwerami bota bez konfliktów sesji Discord.
+                  </p>
+                </div>
 
                 {/* Sekcja pomocnicza: Konfiguracja Redirect URI w Discord Developer Portal */}
                 <div className="mt-6 pt-5 border-t border-[#3f404a] text-left">

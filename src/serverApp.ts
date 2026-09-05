@@ -890,16 +890,12 @@ app.get('/api/bot/events', (req, res) => {
         console.warn('[Discord OAuth] Token rejected (' + (tokenData?.error || 'błąd') + '), uruchamiam natychmiastowe logowanie awaryjne');
       }
 
-      // Jeśli nie udało się pobrać danych (np. invalid_client), twórz autoryzowany profil administratora
+      // Jeśli nie udało się pobrać danych z Discord, nie podstawiaj sztucznego obcego profilu
       if (!userData || !userData.id) {
-        userData = {
-          id: '1368350667634376785',
-          username: 'Właściciel Bota',
-          global_name: 'Właściciel KitekBot',
-          avatar: null,
-          discriminator: '0001',
-          email: 'admin@kitekbot.pl',
-        };
+        return res.status(401).json({
+          success: false,
+          error: 'Nie udało się pobrać profilu z Discord. Upewnij się, że w przeglądarce jesteś zalogowany na swoje konto na discord.com.',
+        });
       }
 
       // Dołącz serwery bota, by zawsze można było nimi zarządzać
@@ -1064,17 +1060,23 @@ app.get('/api/bot/events', (req, res) => {
     }
   };
 
-  // API: Instant direct login (omija błędy OAuth2)
+  // API: Instant direct login z własnym nickiem lub ID
   const handleInstantLogin = (req: express.Request, res: express.Response) => {
+    const rawUsername = String(req.body.username || req.query.username || '').trim();
+    const username = rawUsername || 'Mój Profil Discord';
     const currentGuilds = loadBotGuilds();
     const sessionId = Math.random().toString(36).substring(2) + Date.now().toString(36);
+    const userId = req.body.discord_id || req.query.discord_id || String(Math.floor(100000000000000000 + Math.random() * 900000000000000000));
+    
+    // Dobierz awatar Discorda na podstawie nicku
+    const colorIndex = Math.abs(username.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)) % 5;
     const userPayload = {
-      id: '1368350667634376785',
-      username: 'Właściciel Bota',
-      global_name: 'Właściciel KitekBot',
-      avatar: null,
-      discriminator: '0001',
-      email: 'admin@kitekbot.pl',
+      id: String(userId),
+      username: username,
+      global_name: username,
+      avatar: `https://cdn.discordapp.com/embed/avatars/${colorIndex}.png`,
+      discriminator: '0000',
+      email: `${username.toLowerCase().replace(/[^a-z0-9]/g, '')}@discord.user`,
       guilds: currentGuilds.map((gid) => ({
         id: gid,
         name: `Serwer (${gid})`,

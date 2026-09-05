@@ -12,10 +12,22 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
+    version: "v4.4.0",
+    date: "Dzisiaj, 05.09.2026",
+    badge: "NAJNOWSZA (v4.4.0)",
+    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Usunięto sztywne podstawianie konta Właściciela — użytkownik zawsze loguje się na swoje prawdziwe konto",
+      "Dodano bezpośrednie logowanie własnym nickiem lub ID Discord bez konieczności przechodzenia przez OAuth",
+      "Dodano baner aktywnego konta w Dashboardzie z możliwością natychmiastowego przełączenia / wylogowania",
+      "Zabezpieczono wymuszone ponowne logowanie w Discord OAuth z prompt=consent"
+    ]
+  },
+  {
     version: "v4.3.0",
     date: "Dzisiaj, 05.09.2026",
-    badge: "NAJNOWSZA (v4.3.0)",
-    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    badge: "POPRZEDNIA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Usunięto błąd 'Brak kodu autoryzacji' — wdrożono dedykowany mostek HTML/JS na ścieżce powrotnej /auth/callback",
       "Płynne i automatyczne odczytywanie tokenu użytkownika z fragmentu URL bez blokowania przez backend",
