@@ -12,10 +12,22 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
+    version: "v4.6.0",
+    date: "Dzisiaj, 05.09.2026",
+    badge: "NAJNOWSZA (v4.6.0)",
+    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Utworzono oficjalny plik README.md dokumentujący wersję strony i bota oraz pełną historię wydań",
+      "Wdrożono zasadę wersjonowania: każda modyfikacja i aktualizacja strony podbija wersję i aktualizuje changelog",
+      "Zapewniono spójność numeracji v4.6.0 we wszystkich komponentach, paczce ZIP oraz dokumentacji",
+      "Pełne podsumowanie architektury, instrukcji uruchomienia bota i zasad bezpieczeństwa w README.md"
+    ]
+  },
+  {
     version: "v4.5.0",
     date: "Dzisiaj, 05.09.2026",
-    badge: "NAJNOWSZA (v4.5.0)",
-    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    badge: "POPRZEDNIA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Naprawiono wyświetlanie strony w oknie Preview — usunięto middleware przechwytujące żądania i zwracające surowy JSON",
       "Przywrócono natychmiastowe serwowanie interfejsu aplikacji React / Vite bez zakłóceń",
