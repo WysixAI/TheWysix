@@ -12,10 +12,22 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
+    version: "v3.6.0",
+    date: "Dzisiaj, 05.09.2026",
+    badge: "NAJNOWSZA (v3.6.0)",
+    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Wdrożono bezpośrednie bundlowanie api/auth/callback.ts do api/auth/callback.js w skrypcie build package.json",
+      "Usunięto zbędną zależność @vercel/node z api/auth/callback.ts na rzecz natywnego handlera Express (req: any, res: any)",
+      "Potwierdzono, że ani .gitignore ani .vercelignore nie blokują wygenerowanych plików api/auth/callback.js i api/index.js",
+      "Zapewniono natychmiastowe bundlowanie podczas procesu kompilacji na Vercel przy pushu do GitHuba"
+    ]
+  },
+  {
     version: "v3.5.0",
     date: "Dzisiaj, 05.09.2026",
-    badge: "NAJNOWSZA (v3.5.0)",
-    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    badge: "STABILNA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Wyeliminowano błąd 'Cannot find module /var/task/server' poprzez utworzenie w pełni samowystarczalnego handlera api/auth/callback.js",
       "Dodano automatyczne bundlowanie api/auth/callback.js podczas 'npm run build' obok api/index.js",
