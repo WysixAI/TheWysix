@@ -36,11 +36,19 @@ export interface GuildConfig {
   updatedAt: string;
 }
 
-const SERWERY_DIR = path.join(process.cwd(), 'Serwery');
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const SERWERY_DIR = isServerless ? path.join('/tmp', 'Serwery') : path.join(process.cwd(), 'Serwery');
 
-// Ensure Serwery/ directory exists
-if (!fs.existsSync(SERWERY_DIR)) {
-  fs.mkdirSync(SERWERY_DIR, { recursive: true });
+// In-memory cache fallback to guarantee 100% uptime on serverless environments
+const memoryConfigs = new Map<string, GuildConfig>();
+
+// Ensure Serwery/ directory exists safely without crashing on read-only environments
+try {
+  if (!fs.existsSync(SERWERY_DIR)) {
+    fs.mkdirSync(SERWERY_DIR, { recursive: true });
+  }
+} catch (e: any) {
+  console.warn('[ConfigManager] Read-only filesystem detected, running with in-memory configs:', e.message);
 }
 
 export function getDefaultConfig(guildId: string, guildName?: string): GuildConfig {
@@ -80,17 +88,23 @@ export function getDefaultConfig(guildId: string, guildName?: string): GuildConf
 }
 
 export function getGuildConfig(guildId: string, guildName?: string): GuildConfig {
+  if (memoryConfigs.has(guildId)) {
+    return memoryConfigs.get(guildId)!;
+  }
+
   const filePath = path.join(SERWERY_DIR, `${guildId}.json`);
-  if (fs.existsSync(filePath)) {
-    try {
+  try {
+    if (fs.existsSync(filePath)) {
       const data = fs.readFileSync(filePath, 'utf-8');
       const parsed = JSON.parse(data);
-      // Merge with default values in case new fields are added
-      return { ...getDefaultConfig(guildId, guildName), ...parsed, guildId };
-    } catch (err) {
-      console.error(`Błąd odczytu konfiguracji dla serwera ${guildId}:`, err);
+      const full = { ...getDefaultConfig(guildId, guildName), ...parsed, guildId };
+      memoryConfigs.set(guildId, full);
+      return full;
     }
+  } catch (err) {
+    console.warn(`Błąd odczytu konfiguracji dla serwera ${guildId}:`, err);
   }
+
   // If doesn't exist, create default
   const defaultConf = getDefaultConfig(guildId, guildName);
   saveGuildConfig(guildId, defaultConf);
@@ -98,10 +112,7 @@ export function getGuildConfig(guildId: string, guildName?: string): GuildConfig
 }
 
 export function saveGuildConfig(guildId: string, config: Partial<GuildConfig>): GuildConfig {
-  const filePath = path.join(SERWERY_DIR, `${guildId}.json`);
-  const current = fs.existsSync(filePath)
-    ? JSON.parse(fs.readFileSync(filePath, 'utf-8'))
-    : getDefaultConfig(guildId);
+  const current = memoryConfigs.get(guildId) || getDefaultConfig(guildId);
 
   const updated: GuildConfig = {
     ...current,
@@ -110,25 +121,37 @@ export function saveGuildConfig(guildId: string, config: Partial<GuildConfig>): 
     updatedAt: new Date().toISOString(),
   };
 
-  fs.writeFileSync(filePath, JSON.stringify(updated, null, 2), 'utf-8');
+  memoryConfigs.set(guildId, updated);
+
+  try {
+    const filePath = path.join(SERWERY_DIR, `${guildId}.json`);
+    fs.writeFileSync(filePath, JSON.stringify(updated, null, 2), 'utf-8');
+  } catch (e: any) {
+    // Non-fatal on serverless
+    console.warn(`[ConfigManager] Zapisano w pamięci RAM (błąd zapisu pliku ${guildId}):`, e.message);
+  }
+
   return updated;
 }
 
 export function getAllConfigs(): GuildConfig[] {
+  const result: GuildConfig[] = Array.from(memoryConfigs.values());
   try {
-    const files = fs.readdirSync(SERWERY_DIR);
-    return files
-      .filter((f) => f.endsWith('.json'))
-      .map((f) => {
+    if (fs.existsSync(SERWERY_DIR)) {
+      const files = fs.readdirSync(SERWERY_DIR);
+      for (const f of files) {
+        if (!f.endsWith('.json')) continue;
+        const gId = f.replace('.json', '');
+        if (memoryConfigs.has(gId)) continue;
         try {
           const content = fs.readFileSync(path.join(SERWERY_DIR, f), 'utf-8');
-          return JSON.parse(content);
-        } catch {
-          return null;
-        }
-      })
-      .filter(Boolean);
-  } catch {
-    return [];
-  }
+          const parsed = JSON.parse(content);
+          if (parsed && parsed.guildId) {
+            result.push(parsed);
+          }
+        } catch {}
+      }
+    }
+  } catch {}
+  return result;
 }

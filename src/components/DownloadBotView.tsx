@@ -12,10 +12,22 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
+    version: "v2.8.0",
+    date: "Dzisiaj, 05.09.2026",
+    badge: "NAJNOWSZA (v2.8.0)",
+    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Naprawiono krytyczny błąd Vercel 500 FUNCTION_INVOCATION_FAILED (read-only filesystem EROFS w środowiskach AWS Lambda)",
+      "Dodano bezpieczny silnik pamięci podręcznej in-memory dla konfiguracji serwerów z obsługą katalogu /tmp na platformach serverless",
+      "Wdrożono zaawansowaną obsługę błędów i automatyczną detekcję ścieżek URL w bezserwerowym entrypoincie /api/index.ts",
+      "Zabezpieczono procedurę startu serwera przed próbą otwierania portu 3000 w środowisku Vercel Serverless"
+    ]
+  },
+  {
     version: "v2.7.0",
     date: "Dzisiaj, 05.09.2026",
-    badge: "NAJNOWSZA (v2.7.0)",
-    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    badge: "STABILNA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Dodano interaktywnego asystenta konfiguracji OAuth2 Redirect URI z kopiowaniem adresu domeny jednym kliknięciem (rozwiązanie błędu 'Nieprawidłowe parametry adresu URL')",
       "Obsługa niestandardowych i produkcyjnych domen Vercel (m.in. kitekbot.vercel.app)",

@@ -946,18 +946,26 @@ app.get('/api/bot/events', (req, res) => {
     });
   });
 
+const isServerlessEnv = Boolean(
+  process.env.VERCEL ||
+  process.env.VERCEL_ENV ||
+  process.env.AWS_LAMBDA_FUNCTION_NAME ||
+  process.env.LAMBDA_TASK_ROOT
+);
+
 async function startServer() {
+  if (isServerlessEnv) return;
   const PORT = 3000;
 
   // Vite middleware in dev, static files in production
-  if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+  if (process.env.NODE_ENV !== 'production') {
     const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
     });
     app.use(vite.middlewares);
-  } else if (!process.env.VERCEL) {
+  } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
@@ -970,6 +978,6 @@ async function startServer() {
   });
 }
 
-if (!process.env.VERCEL) {
+if (!isServerlessEnv) {
   startServer();
 }
