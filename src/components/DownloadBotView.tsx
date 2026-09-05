@@ -12,10 +12,22 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
+    version: "v4.5.0",
+    date: "Dzisiaj, 05.09.2026",
+    badge: "NAJNOWSZA (v4.5.0)",
+    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Naprawiono wyświetlanie strony w oknie Preview — usunięto middleware przechwytujące żądania i zwracające surowy JSON",
+      "Przywrócono natychmiastowe serwowanie interfejsu aplikacji React / Vite bez zakłóceń",
+      "Prawidłowe renderowanie ekranu logowania i Dashboardu bezpośrednio w ramce podglądu",
+      "Pełna integracja z panelem bota i bezpośrednim logowaniem kontem użytkownika"
+    ]
+  },
+  {
     version: "v4.4.0",
     date: "Dzisiaj, 05.09.2026",
-    badge: "NAJNOWSZA (v4.4.0)",
-    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    badge: "POPRZEDNIA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Usunięto sztywne podstawianie konta Właściciela — użytkownik zawsze loguje się na swoje prawdziwe konto",
       "Dodano bezpośrednie logowanie własnym nickiem lub ID Discord bez konieczności przechodzenia przez OAuth",

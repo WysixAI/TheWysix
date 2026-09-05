@@ -13,13 +13,6 @@ app.set('trust proxy', 1);
 app.use(express.json());
 app.use(cookieParser());
 
-// Normalize URL prefix for serverless environments (so /api/ routes match regardless of function entrypoint)
-app.use((req, res, next) => {
-  if (req.url && !req.url.startsWith('/api') && !req.url.startsWith('/auth/callback') && !req.url.startsWith('/assets')) {
-    req.url = '/api' + (req.url.startsWith('/') ? req.url : '/' + req.url);
-  }
-  next();
-});
 
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID || '1368350667634376785';
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET || '-c7yfLwX-ZojIhLF3TCHZxavvmLyCN9K';
