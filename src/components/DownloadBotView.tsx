@@ -12,10 +12,23 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
-    version: "v2.5.0",
-    date: "Dzisiaj, 04.09.2026",
-    badge: "NAJNOWSZA (v2.5.0)",
+    version: "v2.6.0",
+    date: "Dzisiaj, 05.09.2026",
+    badge: "NAJNOWSZA (v2.6.0)",
     badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Pełne wsparcie i optymalizacja hostingu pod platformę Vercel (eliminacja błędu 404 na /auth/callback)",
+      "Wdrożono bezserwerowy punkt wejścia /api/index.ts oraz kompleksowe reguły routingu rewrites w vercel.json",
+      "Dodano dwutorową obsługę logowania OAuth: natywny handler Express Serverless + fallback SPA w React z natychmiastową wymianą kodu przez /api/auth/callback?format=json",
+      "Rozszerzono walidację zdarzeń okna popup o domeny Vercel (*.vercel.app)",
+      "Wprowadzono trwałą synchronizację sesji użytkowników w chmurze Upstash Redis dla środowisk bezstanowych Serverless"
+    ]
+  },
+  {
+    version: "v2.5.0",
+    date: "04.09.2026",
+    badge: "STABILNA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Wdrożono natychmiastowy eksport pełnego kodu źródłowego Dashboardu i Backendu Express do pliku ZIP (/api/download/project-zip)",
       "Umożliwiono pełną analizę architektury przepływu: bot /api/bot/sync -> Redis/RAM -> SSE broadcast -> React UI",

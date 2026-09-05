@@ -1,13 +1,17 @@
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
-import { createServer as createViteServer } from 'vite';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import JSZip from 'jszip';
 import { getGuildConfig, saveGuildConfig, getAllConfigs } from './src/serverConfigManager';
 
 dotenv.config();
+
+export const app = express();
+app.set('trust proxy', 1);
+app.use(express.json());
+app.use(cookieParser());
 
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID || '1368350667634376785';
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET || '-c7yfLwX-ZojIhLF3TCHZxavvmLyCN9K';
@@ -21,6 +25,50 @@ const REDIS_KEY = 'bot_guild_ids';
 let memoryBotGuilds: string[] = [];
 
 const sessions = new Map<string, any>();
+
+async function saveSession(sessionId: string, userPayload: any) {
+  sessions.set(sessionId, userPayload);
+  try {
+    if (REDIS_URL && REDIS_TOKEN) {
+      await fetch(REDIS_URL, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${REDIS_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(['SET', `session:${sessionId}`, JSON.stringify(userPayload), 'EX', 7 * 24 * 60 * 60]),
+      });
+    }
+  } catch (e: any) {
+    console.warn(`[Redis] Nie udało się zapisać sesji do Redis:`, e.message);
+  }
+}
+
+async function getSession(sessionId: string): Promise<any | null> {
+  if (sessions.has(sessionId)) return sessions.get(sessionId);
+  try {
+    if (REDIS_URL && REDIS_TOKEN) {
+      const res = await fetch(`${REDIS_URL}/get/session:${sessionId}`, {
+        headers: { Authorization: `Bearer ${REDIS_TOKEN}` },
+        cache: 'no-store',
+      });
+      const data = await res.json();
+      if (data && data.result) {
+        let parsed = data.result;
+        if (typeof parsed === 'string') {
+          try { parsed = JSON.parse(parsed); } catch {}
+        }
+        if (parsed && typeof parsed === 'object') {
+          sessions.set(sessionId, parsed);
+          return parsed;
+        }
+      }
+    }
+  } catch (e: any) {
+    console.warn(`[Redis] Nie udało się odczytać sesji z Redis:`, e.message);
+  }
+  return null;
+}
 
 async function redisGet(key: string): Promise<string[]> {
   try {
@@ -103,37 +151,38 @@ function broadcastBotGuilds(guildIds: string[]) {
   }
 }
 
-async function startServer() {
-  const app = express();
-  const PORT = 3000;
+// Vercel serverless / root handler helper: jeśli na Vercel request z ?code= trafi na /api
+app.use((req, res, next) => {
+  if (req.query.code && (req.path === '/' || req.path === '/api' || req.path === '/api/index')) {
+    return handleCallback(req, res);
+  }
+  next();
+});
 
-  app.use(express.json());
-  app.use(cookieParser());
+// SSE: Real-time event stream for the dashboard
+app.get('/api/bot/events', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
+  res.setHeader('Connection', 'keep-alive');
+  if (res.flushHeaders) {
+    res.flushHeaders();
+  }
 
-  // SSE: Real-time event stream for the dashboard
-  app.get('/api/bot/events', (req, res) => {
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache, no-transform');
-    res.setHeader('Connection', 'keep-alive');
-    if (res.flushHeaders) {
-      res.flushHeaders();
-    }
+  sseClients.add(res);
 
-    sseClients.add(res);
-
-    // Send current guilds immediately on connect
-    redisGet(REDIS_KEY).then((guilds) => {
-      try {
-        res.write(`data: ${JSON.stringify({ type: 'GUILD_LIST', guildIds: guilds })}\n\n`);
-      } catch {
-        sseClients.delete(res);
-      }
-    });
-
-    req.on('close', () => {
+  // Send current guilds immediately on connect
+  redisGet(REDIS_KEY).then((guilds) => {
+    try {
+      res.write(`data: ${JSON.stringify({ type: 'GUILD_LIST', guildIds: guilds })}\n\n`);
+    } catch {
       sseClients.delete(res);
-    });
+    }
   });
+
+  req.on('close', () => {
+    sseClients.delete(res);
+  });
+});
 
   // API: Get active bot guilds list (with direct Bot REST API query if configured)
   app.get('/api/bot/guilds', async (req, res) => {
@@ -756,7 +805,7 @@ async function startServer() {
         guilds: manageableGuilds,
       };
 
-      sessions.set(sessionId, userPayload);
+      await saveSession(sessionId, userPayload);
 
       res.cookie('kitek_session', sessionId, {
         httpOnly: true,
@@ -764,6 +813,11 @@ async function startServer() {
         sameSite: 'none',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
+
+      // Jeśli klient poprosił o JSON (np. React SPA fetch na Vercel)
+      if (req.query.format === 'json' || req.headers.accept?.includes('application/json')) {
+        return res.json({ success: true, user: userPayload });
+      }
 
       // Send success HTML with postMessage and auto-close
       return res.send(`
@@ -805,7 +859,7 @@ async function startServer() {
                 window.opener.postMessage({ type: 'DISCORD_AUTH_SUCCESS', user: userData }, '*');
                 setTimeout(() => {
                   window.close();
-                }, 400);
+                }, 300);
               } else {
                 window.location.href = '/';
               }
@@ -815,6 +869,9 @@ async function startServer() {
       `);
     } catch (err: any) {
       console.error('OAuth Callback Error:', err);
+      if (req.query.format === 'json' || req.headers.accept?.includes('application/json')) {
+        return res.status(400).json({ success: false, error: err.message || 'Błąd logowania' });
+      }
       return res.send(`
         <!DOCTYPE html>
         <html>
@@ -837,21 +894,36 @@ async function startServer() {
 
   app.get('/auth/callback', handleCallback);
   app.get('/auth/callback/', handleCallback);
+  app.get('/api/auth/callback', handleCallback);
+  app.get('/api/auth/callback/', handleCallback);
+  app.post('/api/auth/exchange', handleCallback);
 
   // API 3: Get logged in user details
-  app.get('/api/auth/me', (req, res) => {
+  app.get('/api/auth/me', async (req, res) => {
     const sessionId = req.cookies.kitek_session;
-    if (sessionId && sessions.has(sessionId)) {
-      return res.json({ authenticated: true, user: sessions.get(sessionId) });
+    if (sessionId) {
+      const user = await getSession(sessionId);
+      if (user) {
+        return res.json({ authenticated: true, user });
+      }
     }
     return res.json({ authenticated: false, user: null });
   });
 
   // API 4: Logout
-  app.post('/api/auth/logout', (req, res) => {
+  app.post('/api/auth/logout', async (req, res) => {
     const sessionId = req.cookies.kitek_session;
     if (sessionId) {
       sessions.delete(sessionId);
+      if (REDIS_URL && REDIS_TOKEN) {
+        try {
+          await fetch(REDIS_URL, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${REDIS_TOKEN}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(['DEL', `session:${sessionId}`]),
+          });
+        } catch {}
+      }
     }
     res.clearCookie('kitek_session', {
       httpOnly: true,
@@ -868,18 +940,23 @@ async function startServer() {
       clientId: CLIENT_ID,
       redirectUriDev: 'https://ais-dev-5cjov5lzkdkahvqz3a7yun-454494415153.europe-west2.run.app/auth/callback',
       redirectUriPre: 'https://ais-pre-5cjov5lzkdkahvqz3a7yun-454494415153.europe-west2.run.app/auth/callback',
+      redirectUriVercel: 'https://botdashboard-tau.vercel.app/auth/callback',
       currentAppUrl: appUrl,
     });
   });
 
+async function startServer() {
+  const PORT = 3000;
+
   // Vite middleware in dev, static files in production
-  if (process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+    const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
     });
     app.use(vite.middlewares);
-  } else {
+  } else if (!process.env.VERCEL) {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
@@ -892,4 +969,6 @@ async function startServer() {
   });
 }
 
-startServer();
+if (!process.env.VERCEL) {
+  startServer();
+}

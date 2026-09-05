@@ -279,11 +279,62 @@ export default function App() {
     }
   };
 
+  // Dedicated check for /auth/callback (works seamlessly with Vercel SPA routing)
+  const isAuthCallbackPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/auth/callback');
+
+  useEffect(() => {
+    if (!isAuthCallbackPage) return;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const error = urlParams.get('error') || urlParams.get('error_description');
+
+    if (error) {
+      if (window.opener) {
+        window.opener.postMessage({ type: 'DISCORD_AUTH_ERROR', error: String(error) }, '*');
+        setTimeout(() => window.close(), 1200);
+      }
+      return;
+    }
+
+    if (code) {
+      const redirectUri = `${window.location.origin}/auth/callback`;
+      fetch(`/api/auth/callback?code=${encodeURIComponent(code)}&redirect_uri=${encodeURIComponent(redirectUri)}&format=json`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && data.success && data.user) {
+            localStorage.setItem('kitek_discord_user', JSON.stringify(data.user));
+            if (window.opener) {
+              window.opener.postMessage({ type: 'DISCORD_AUTH_SUCCESS', user: data.user }, '*');
+              setTimeout(() => window.close(), 300);
+            } else {
+              window.location.href = '/';
+            }
+          } else {
+            throw new Error(data?.error || 'Błąd autoryzacji');
+          }
+        })
+        .catch((err) => {
+          if (window.opener) {
+            window.opener.postMessage({ type: 'DISCORD_AUTH_ERROR', error: err.message }, '*');
+            setTimeout(() => window.close(), 2000);
+          }
+        });
+    }
+  }, [isAuthCallbackPage]);
+
   // Listen for popup message after Discord OAuth callback
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       const origin = event.origin;
-      if (!origin.endsWith('.run.app') && !origin.includes('localhost')) {
+      const isAllowedOrigin =
+        origin === window.location.origin ||
+        origin.endsWith('.run.app') ||
+        origin.endsWith('.vercel.app') ||
+        origin.includes('localhost') ||
+        origin.includes('127.0.0.1');
+
+      if (!isAllowedOrigin) {
         return;
       }
 
@@ -389,6 +440,22 @@ export default function App() {
     return Array.isArray(botGuildIds) && botGuildIds.some((id) => String(id) === String(guildId));
   };
   const activeWithBotCount = user?.guilds?.filter((g) => isGuildBotPresent(g.id)).length || 0;
+
+  if (isAuthCallbackPage) {
+    return (
+      <div className="min-h-screen bg-[#24252f] text-white flex flex-col items-center justify-center p-6 text-center font-sans">
+        <div className="bg-[#2c2d38] border border-[#3f404d] rounded-2xl p-8 max-w-sm w-full shadow-2xl space-y-4">
+          <div className="w-12 h-12 rounded-xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center mx-auto text-indigo-400">
+            <Bot className="w-6 h-6 animate-pulse" />
+          </div>
+          <h2 className="text-xl font-black text-white">Logowanie Discord</h2>
+          <p className="text-sm text-neutral-300">
+            Autoryzacja przebiegła pomyślnie. Trwa finalizowanie logowania i zamykanie okna...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full bg-[#3f404a] text-white flex flex-col font-['Montserrat',sans-serif] relative overflow-hidden selection:bg-[#5865F2] selection:text-white">

@@ -2,8 +2,22 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "installCommand": "npm install",
-  "api": {
-    "builder": "@vercel/node",
-    "src": "dist/server.cjs"
-  }
+  "rewrites": [
+    {
+      "source": "/auth/callback",
+      "destination": "/api"
+    },
+    {
+      "source": "/auth/callback/",
+      "destination": "/api"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/api"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
