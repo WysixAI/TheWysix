@@ -12,10 +12,22 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
+    version: "v4.3.0",
+    date: "Dzisiaj, 05.09.2026",
+    badge: "NAJNOWSZA (v4.3.0)",
+    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Usunięto błąd 'Brak kodu autoryzacji' — wdrożono dedykowany mostek HTML/JS na ścieżce powrotnej /auth/callback",
+      "Płynne i automatyczne odczytywanie tokenu użytkownika z fragmentu URL bez blokowania przez backend",
+      "Błyskawiczne przekazywanie danych uwierzytelnienia z okna pop-up do Dashboardu w 300ms",
+      "Pełne pobieranie spersonalizowanego profilu użytkownika Discord oraz jego rzeczywistych serwerów"
+    ]
+  },
+  {
     version: "v4.2.0",
     date: "Dzisiaj, 05.09.2026",
-    badge: "NAJNOWSZA (v4.2.0)",
-    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    badge: "STABILNA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Przełączono autoryzację Discord na Implicit Grant (response_type=token) — 100% autentyczne logowanie bez wymogu Client Secret",
       "Każdy użytkownik loguje się teraz na swoje WŁASNE konto Discord (indywidualny nick, awatar i discriminator)",

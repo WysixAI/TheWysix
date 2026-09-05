@@ -859,9 +859,9 @@ export default function App() {
                 </div>
               )}
 
-              {/* Kreska i napis v4.2.0 KitekBot */}
+              {/* Kreska i napis v4.3.0 KitekBot */}
               <div className="pt-3 border-t border-[#2a2b34] text-center text-xs text-neutral-400 font-medium">
-                v4.2.0 &bull; KitekBot REST API
+                v4.3.0 &bull; KitekBot REST API
               </div>
             </div>
           </div>

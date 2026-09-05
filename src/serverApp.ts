@@ -678,11 +678,135 @@ app.get('/api/bot/events', (req, res) => {
       `);
     }
 
+    // Jeśli żądanie pochodzi z przeglądarki (np. powrót z Discord OAuth), serwuj stronę mostka HTML/JS
+    // która odczytuje fragment URL (#access_token=...) oraz parametry (?code=...) i loguje użytkownika
+    if (!req.query.format && (!req.headers.accept || !req.headers.accept.includes('application/json'))) {
+      return res.send(`
+        <!DOCTYPE html>
+        <html lang="pl">
+        <head>
+          <meta charset="utf-8">
+          <title>KitekBot — Logowanie Discord</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body {
+              background-color: #1e1f28;
+              color: #ffffff;
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              height: 100vh;
+              margin: 0;
+            }
+            .card {
+              text-align: center;
+              background: #272832;
+              padding: 2.5rem;
+              border-radius: 1rem;
+              border: 1px solid #3b3c48;
+              box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+              max-width: 420px;
+              width: 90%;
+            }
+            .spinner {
+              width: 44px;
+              height: 44px;
+              border: 4px solid rgba(88, 101, 242, 0.2);
+              border-top-color: #5865f2;
+              border-radius: 50%;
+              animation: spin 0.8s linear infinite;
+              margin: 0 auto 1.5rem auto;
+            }
+            @keyframes spin { to { transform: rotate(360deg); } }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <div class="spinner"></div>
+            <h2 style="margin: 0 0 0.5rem 0; font-size: 1.25rem;">Logowanie do KitekBot...</h2>
+            <p style="margin: 0; color: #a1a1aa; font-size: 0.875rem;" id="status-text">Pobieranie Twojego konta i serwerów Discord...</p>
+          </div>
+          <script>
+            (async function() {
+              const statusEl = document.getElementById('status-text');
+
+              // 1. Odczytaj token z fragmentu hash (#access_token=...)
+              const hash = window.location.hash.startsWith('#') ? window.location.hash.substring(1) : window.location.hash;
+              const hashParams = new URLSearchParams(hash);
+              const accessToken = hashParams.get('access_token');
+              const tokenType = hashParams.get('token_type') || 'Bearer';
+
+              // 2. Odczytaj parametry query (?code=...)
+              const searchParams = new URLSearchParams(window.location.search);
+              const code = searchParams.get('code');
+              const error = searchParams.get('error') || hashParams.get('error') || searchParams.get('error_description');
+
+              if (error) {
+                statusEl.innerText = 'Błąd Discord: ' + error;
+                if (window.opener) {
+                  window.opener.postMessage({ type: 'DISCORD_AUTH_ERROR', error: String(error) }, '*');
+                  setTimeout(() => window.close(), 2000);
+                }
+                return;
+              }
+
+              // Jeśli mamy access_token od Discorda (PRAWDZIWE KONTO I SERWERY)
+              if (accessToken) {
+                try {
+                  const res = await fetch('/api/auth/token-login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ access_token: accessToken, token_type: tokenType })
+                  });
+                  const data = await res.json();
+                  if (data && data.success && data.user) {
+                    localStorage.setItem('kitek_discord_user', JSON.stringify(data.user));
+                    statusEl.innerText = 'Zalogowano pomyślnie jako ' + (data.user.global_name || data.user.username) + '!';
+                    if (window.opener) {
+                      window.opener.postMessage({ type: 'DISCORD_AUTH_SUCCESS', user: data.user }, '*');
+                      setTimeout(() => window.close(), 300);
+                    } else {
+                      window.location.href = '/dashboard';
+                    }
+                    return;
+                  }
+                } catch (e) {
+                  console.error('Błąd token-login:', e);
+                }
+              }
+
+              // Jeśli mamy kod autoryzacji
+              if (code) {
+                try {
+                  const res = await fetch('/api/auth/callback?code=' + encodeURIComponent(code) + '&format=json');
+                  const data = await res.json();
+                  if (data && data.success && data.user) {
+                    localStorage.setItem('kitek_discord_user', JSON.stringify(data.user));
+                    if (window.opener) {
+                      window.opener.postMessage({ type: 'DISCORD_AUTH_SUCCESS', user: data.user }, '*');
+                      setTimeout(() => window.close(), 300);
+                    } else {
+                      window.location.href = '/dashboard';
+                    }
+                    return;
+                  }
+                } catch (e) {
+                  console.error('Błąd code callback:', e);
+                }
+              }
+
+              // Jeśli brak tokenu i kodu, wróć na stronę główną
+              window.location.href = '/';
+            })();
+          </script>
+        </body>
+        </html>
+      `);
+    }
+
     if (!code) {
-      if (req.query.format === 'json' || req.headers.accept?.includes('application/json')) {
-        return res.status(400).json({ success: false, error: 'Brak kodu autoryzacji.' });
-      }
-      return res.status(400).send('Brak kodu autoryzacji.');
+      return res.status(400).json({ success: false, error: 'Brak kodu autoryzacji.' });
     }
 
     try {
