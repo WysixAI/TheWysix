@@ -12,10 +12,26 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
+    version: "v5.2.0",
+    date: "Dzisiaj, 05.09.2026",
+    badge: "NAJNOWSZA (v5.2.0)",
+    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Wdrożono zaawansowany system akcji komponentów (Component Actions): Kick, Ban, Send Message, Ephemeral Reply, Give Role, Remove Role oraz Send DM",
+      "Dodano pełne wsparcie dla Action Row ze String Select Menu (Menu rozwijane z opcjami, emoji, opisami, wartościami i listą akcji) w stylu Discord message.style",
+      "Dodano akcje bezpośrednio do przycisków w Action Row z konfiguracją typu, roli, powodu i szablonu odpowiedzi",
+      "Wzbogacono edytor o pasek szybkiego formatowania Markdown (Pogrubienie B, Kursywa I, Podkreślenie U, Przekreślenie S, Wzmianka @, Emotikony)",
+      "Dopasowano stylistykę i kolorystykę kreatora do spójnego motywu panelu (ciemny motyw #1a1b23, karty #202128, obramowania #3b3c47, akcent Blurple #5865F2)",
+      "Dodano komponent Media (duży baner / obraz graficzny ze spoilerem) oraz ulepszone separatory ze stylizowaną kreską Divider",
+      "Zaimplementowano interaktywny symulator podglądu na żywo (Live Preview Simulator): kliknięcie przycisku lub wybór z menu natychmiast symuluje wykonanie akcji bota",
+      "Zaktualizowano silnik bota w index.js o natychmiastowe wykonywanie akcji przycisków i menu w zdarzeniu interactionCreate"
+    ]
+  },
+  {
     version: "v5.1.0",
     date: "Dzisiaj, 05.09.2026",
-    badge: "NAJNOWSZA (v5.1.0)",
-    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    badge: "POPRZEDNIA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Wdrożono drzewiasty edytor komponentów (Component Tree Builder) ściśle według zrzutów z message.style",
       "Dodano sekcje (Sections) z tekstem do 4000 znaków, miniaturkami (Thumbnail) i banerami (Image)",

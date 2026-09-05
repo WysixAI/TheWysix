@@ -5,27 +5,33 @@ import {
   ChevronUp,
   Copy,
   Trash2,
-  Plus,
   Send,
   Save,
   Check,
   AlertCircle,
   Hash,
   RefreshCw,
-  ExternalLink,
+  Sparkles,
   Layers,
-  Sparkles
+  Image as ImageIcon,
+  Minus,
+  Sliders
 } from 'lucide-react';
 import {
   MessageContainer,
   ComponentSection,
   ComponentSeparator,
   ComponentActionRow,
+  ComponentMedia,
   ContainerSubComponent,
   MessageBuilderConfig,
   WelcomeButton,
   getDefaultContainer,
 } from '../types/guildConfig';
+import { ActionRowEditor } from './messageBuilder/ActionRowEditor';
+import { MediaEditor } from './messageBuilder/MediaEditor';
+import { MarkdownToolbar } from './messageBuilder/MarkdownToolbar';
+import { LiveDiscordSimulator } from './messageBuilder/LiveDiscordSimulator';
 
 interface MessageStyleBuilderProps {
   type: 'welcome' | 'goodbye';
@@ -44,36 +50,28 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // Guild config state
+  const [enabled, setEnabled] = useState(true);
+  const [channelId, setChannelId] = useState('');
+  const [plainMessage, setPlainMessage] = useState(
+    isWelcome
+      ? '👋 Witaj {user} na serwerze **{server.name}**!'
+      : '👋 Żegnaj {user}, opuściłeś serwer **{server.name}**.'
+  );
+  const [containers, setContainers] = useState<MessageContainer[]>([getDefaultContainer()]);
+
+  // Channels list
+  const [channels, setChannels] = useState<Array<{ id: string; name: string }>>([]);
+  const [loadingChannels, setLoadingChannels] = useState(false);
+
+  // Test sending
   const [testSending, setTestSending] = useState(false);
   const [testSuccess, setTestSuccess] = useState<string | null>(null);
   const [testError, setTestError] = useState<string | null>(null);
 
-  const [channels, setChannels] = useState<{ id: string; name: string }[]>([]);
-  const [loadingChannels, setLoadingChannels] = useState(false);
-
-  // Builder State
-  const [enabled, setEnabled] = useState(true);
-  const [channelId, setChannelId] = useState<string>('');
-  const [plainMessage, setPlainMessage] = useState(
-    isWelcome
-      ? 'Hej {user}, witamy w naszych progach! 🌟 Rozgość się i zapoznaj z regulaminem.'
-      : '{user} opuścił nasz serwer. Żegnaj i powodzenia! 👋'
-  );
-  const [containers, setContainers] = useState<MessageContainer[]>([getDefaultContainer()]);
-
-  // Collapsed state map
-  const [expandedNodes, setExpandedNodes] = useState<{ [id: string]: boolean }>({
-    'root-components': true,
-    'container-1': true,
-    'sec-1': true,
-    'sec-1-accessory': true,
-    'sec-1-texts': true,
-    'sep-1': true,
-    'sec-2': true,
-    'sep-2': true,
-    'row-1': true,
-  });
-
+  // Expandable tree node state
+  const [expandedNodes, setExpandedNodes] = useState<Record<string, boolean>>({});
   const [showAddMenu, setShowAddMenu] = useState<string | null>(null);
 
   const toggleNode = (id: string) => {
@@ -159,20 +157,25 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
             if (sec.accessory && sec.accessory.type === 'Image' && sec.accessory.url) {
               imageUrl = sec.accessory.url;
             }
-          } else if (c.type === 'separator') {
-            description += '\n\n───────────────\n';
           } else if (c.type === 'action_row') {
             const row = c as ComponentActionRow;
-            buttons = [...buttons, ...row.buttons];
+            if (row.rowType !== 'select_menu' && row.buttons) {
+              buttons.push(...row.buttons);
+            }
+          } else if (c.type === 'media') {
+            const media = c as ComponentMedia;
+            if (media.url && !imageUrl) {
+              imageUrl = media.url;
+            }
           }
         });
       }
 
-      const payloadConfig: MessageBuilderConfig = {
+      const updatedModuleConfig: MessageBuilderConfig = {
         enabled,
         channelId: channelId || null,
         message: plainMessage,
-        useEmbed: containers.length > 0,
+        useEmbed: true,
         containers,
         embed: {
           color,
@@ -181,26 +184,29 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
           thumbnailUrl,
           imageUrl,
           fields: [],
-          footerText: `KitekBot ${type.toUpperCase()} • ${guild.name}`,
+          footerText: `KitekBot • ${guild.name}`,
           includeTimestamp: true,
         },
         buttons,
       };
 
       const res = await fetch(`/api/guilds/${guild.id}`, {
-        method: 'POST',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          [type]: payloadConfig,
+          [type]: updatedModuleConfig,
         }),
       });
 
-      if (res.ok) {
+      const data = await res.json();
+      if (res.ok && data.success) {
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 3000);
+      } else {
+        alert(data.error || 'Wystąpił błąd podczas zapisywania konfiguracji.');
       }
-    } catch (err) {
-      console.error('Błąd zapisu:', err);
+    } catch (err: any) {
+      alert(err.message || 'Błąd połączenia z serwerem API.');
     } finally {
       setSaving(false);
     }
@@ -208,10 +214,11 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
 
   const handleSendTest = async () => {
     if (!channelId) {
-      setTestError('Wybierz najpierw kanał docelowy z listy powyżej!');
+      setTestError('Wybierz lub podaj kanał docelowy przed wysłaniem testu!');
       setTimeout(() => setTestError(null), 4000);
       return;
     }
+
     setTestSending(true);
     setTestSuccess(null);
     setTestError(null);
@@ -219,6 +226,7 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
     try {
       const firstContainer = containers[0];
       const color = firstContainer ? firstContainer.color : '#5865F2';
+
       let description = '';
       let thumbnailUrl = '';
       let imageUrl = '';
@@ -237,11 +245,16 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
             if (sec.accessory && sec.accessory.type === 'Image' && sec.accessory.url) {
               imageUrl = sec.accessory.url;
             }
-          } else if (c.type === 'separator') {
-            description += '\n\n───────────────\n';
           } else if (c.type === 'action_row') {
             const row = c as ComponentActionRow;
-            buttons = [...buttons, ...row.buttons];
+            if (row.rowType !== 'select_menu' && row.buttons) {
+              buttons.push(...row.buttons);
+            }
+          } else if (c.type === 'media') {
+            const media = c as ComponentMedia;
+            if (media.url && !imageUrl) {
+              imageUrl = media.url;
+            }
           }
         });
       }
@@ -338,7 +351,10 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
   };
 
   // Sub-component manipulations
-  const addSubComponent = (cIndex: number, compType: 'section' | 'separator' | 'action_row') => {
+  const addSubComponent = (
+    cIndex: number,
+    compType: 'section' | 'separator' | 'action_row' | 'media'
+  ) => {
     setContainers((prev) => {
       const copy = [...prev];
       const target = { ...copy[cIndex] };
@@ -361,16 +377,27 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
           divider: true,
         };
         currentList.push(sep);
+      } else if (compType === 'media') {
+        const media: ComponentMedia = {
+          id: newId,
+          type: 'media',
+          url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&auto=format&fit=crop&q=80',
+          caption: 'Baner powitalny serwera',
+          spoiler: false,
+        };
+        currentList.push(media);
       } else {
         const row: ComponentActionRow = {
           id: newId,
           type: 'action_row',
+          rowType: 'buttons',
           buttons: [
             {
               id: `btn-${Date.now()}`,
               label: 'Przycisk',
               style: 'PRIMARY',
               customId: `btn_${Date.now()}`,
+              actions: [],
             },
           ],
         };
@@ -498,24 +525,6 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
     });
   };
 
-  const clearSectionTexts = (cIndex: number, compIdx: number) => {
-    setContainers((prev) => {
-      const copy = [...prev];
-      const target = { ...copy[cIndex] };
-      const comp = target.components[compIdx] as ComponentSection;
-      if (comp && comp.type === 'section') {
-        const newSec: ComponentSection = { ...comp, texts: [] };
-        target.components = [
-          ...target.components.slice(0, compIdx),
-          newSec,
-          ...target.components.slice(compIdx + 1),
-        ];
-        copy[cIndex] = target;
-      }
-      return copy;
-    });
-  };
-
   // Separator details
   const updateSeparator = (cIndex: number, compIdx: number, patch: Partial<ComponentSeparator>) => {
     setContainers((prev) => {
@@ -535,24 +544,14 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
     });
   };
 
-  // Action Row buttons
-  const addRowButton = (cIndex: number, compIdx: number) => {
+  // Action row & Media updates
+  const updateActionRow = (cIndex: number, compIdx: number, patch: Partial<ComponentActionRow>) => {
     setContainers((prev) => {
       const copy = [...prev];
       const target = { ...copy[cIndex] };
       const comp = target.components[compIdx] as ComponentActionRow;
       if (comp && comp.type === 'action_row') {
-        if (comp.buttons.length >= 5) return prev;
-        const newBtn: WelcomeButton = {
-          id: `btn-${Date.now()}`,
-          label: `Przycisk ${comp.buttons.length + 1}`,
-          style: 'PRIMARY',
-          customId: `btn_${Date.now()}`,
-        };
-        const newRow: ComponentActionRow = {
-          ...comp,
-          buttons: [...comp.buttons, newBtn],
-        };
+        const newRow: ComponentActionRow = { ...comp, ...patch };
         target.components = [
           ...target.components.slice(0, compIdx),
           newRow,
@@ -564,37 +563,16 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
     });
   };
 
-  const updateRowButton = (cIndex: number, compIdx: number, btnIdx: number, patch: Partial<WelcomeButton>) => {
+  const updateMedia = (cIndex: number, compIdx: number, patch: Partial<ComponentMedia>) => {
     setContainers((prev) => {
       const copy = [...prev];
       const target = { ...copy[cIndex] };
-      const comp = target.components[compIdx] as ComponentActionRow;
-      if (comp && comp.type === 'action_row') {
-        const newButtons = [...comp.buttons];
-        newButtons[btnIdx] = { ...newButtons[btnIdx], ...patch };
-        const newRow: ComponentActionRow = { ...comp, buttons: newButtons };
+      const comp = target.components[compIdx] as ComponentMedia;
+      if (comp && comp.type === 'media') {
+        const newMedia: ComponentMedia = { ...comp, ...patch };
         target.components = [
           ...target.components.slice(0, compIdx),
-          newRow,
-          ...target.components.slice(compIdx + 1),
-        ];
-        copy[cIndex] = target;
-      }
-      return copy;
-    });
-  };
-
-  const removeRowButton = (cIndex: number, compIdx: number, btnIdx: number) => {
-    setContainers((prev) => {
-      const copy = [...prev];
-      const target = { ...copy[cIndex] };
-      const comp = target.components[compIdx] as ComponentActionRow;
-      if (comp && comp.type === 'action_row') {
-        const newButtons = comp.buttons.filter((_, i) => i !== btnIdx);
-        const newRow: ComponentActionRow = { ...comp, buttons: newButtons };
-        target.components = [
-          ...target.components.slice(0, compIdx),
-          newRow,
+          newMedia,
           ...target.components.slice(compIdx + 1),
         ];
         copy[cIndex] = target;
@@ -609,9 +587,9 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
   };
 
   return (
-    <div className="flex-1 w-full flex flex-col bg-[#1e1f22] text-[#dbdee1] min-h-screen">
+    <div className="flex-1 w-full flex flex-col bg-[#1a1b23] text-[#dbdee1] min-h-screen">
       {/* Top Header Bar */}
-      <div className="h-14 border-b border-[#2b2d31] bg-[#232428] px-6 flex items-center justify-between shrink-0">
+      <div className="h-14 border-b border-[#282936] bg-[#202128] px-6 flex items-center justify-between shrink-0 shadow-md">
         <div className="flex items-center gap-3">
           <button
             onClick={onBackToDashboard}
@@ -638,7 +616,7 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
           <button
             onClick={handleSendTest}
             disabled={testSending || !channelId}
-            className="px-3.5 py-1.5 bg-[#2b2d31] hover:bg-[#35373c] text-white border border-[#3b3e45] rounded-lg text-xs font-bold flex items-center gap-2 cursor-pointer transition-all disabled:opacity-50"
+            className="px-3.5 py-1.5 bg-[#292a36] hover:bg-[#343545] text-white border border-[#3b3c4f] rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-all disabled:opacity-50"
           >
             <Send className="w-3.5 h-3.5 text-[#5865F2]" />
             <span>{testSending ? 'Wysyłanie...' : 'Wyślij Test'}</span>
@@ -647,7 +625,7 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-4 py-1.5 bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold rounded-lg text-xs flex items-center gap-2 cursor-pointer shadow transition-all active:scale-95 disabled:opacity-50"
+            className="px-4 py-1.5 bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold rounded-xl text-xs flex items-center gap-2 cursor-pointer shadow-lg shadow-indigo-950/40 transition-all active:scale-95 disabled:opacity-50"
           >
             {saveSuccess ? (
               <>
@@ -666,20 +644,20 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
 
       {/* Notifications */}
       {testSuccess && (
-        <div className="bg-emerald-950/80 border-b border-emerald-500/40 px-6 py-2 text-xs font-bold text-emerald-300 flex items-center gap-2 animate-in fade-in">
+        <div className="bg-emerald-950/90 border-b border-emerald-500/40 px-6 py-2.5 text-xs font-bold text-emerald-300 flex items-center gap-2 animate-in fade-in">
           <Check className="w-4 h-4 text-emerald-400" />
           <span>{testSuccess}</span>
         </div>
       )}
       {testError && (
-        <div className="bg-rose-950/80 border-b border-rose-500/40 px-6 py-2 text-xs font-bold text-rose-300 flex items-center gap-2 animate-in fade-in">
+        <div className="bg-rose-950/90 border-b border-rose-500/40 px-6 py-2.5 text-xs font-bold text-rose-300 flex items-center gap-2 animate-in fade-in">
           <AlertCircle className="w-4 h-4 text-rose-400" />
           <span>{testError}</span>
         </div>
       )}
 
       {/* Settings Ribbon: Channel & State */}
-      <div className="bg-[#2b2d31] border-b border-[#1e1f22] px-6 py-3 flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-[#202128] border-b border-[#282936] px-6 py-3 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <label className="flex items-center gap-2 cursor-pointer select-none">
             <input
@@ -693,7 +671,7 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
             </span>
           </label>
 
-          <div className="h-4 w-[1px] bg-neutral-700" />
+          <div className="h-4 w-[1px] bg-[#363748]" />
 
           {/* Channel Selector */}
           <div className="flex items-center gap-2">
@@ -703,7 +681,7 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
               <select
                 value={channelId}
                 onChange={(e) => setChannelId(e.target.value)}
-                className="bg-[#1e1f22] border border-[#3b3e45] rounded-md px-3 py-1 text-xs font-mono text-white outline-none focus:border-[#5865F2]"
+                className="bg-[#181920] border border-[#3b3c4f] rounded-lg px-3 py-1.5 text-xs font-mono text-white outline-none focus:border-[#5865F2]"
               >
                 <option value="">Wybierz kanał...</option>
                 {channels.map((c) => (
@@ -718,13 +696,13 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
                 value={channelId}
                 onChange={(e) => setChannelId(e.target.value)}
                 placeholder="Wklej ID kanału (np. 123456...)"
-                className="bg-[#1e1f22] border border-[#3b3e45] rounded-md px-3 py-1 text-xs font-mono text-white outline-none focus:border-[#5865F2] w-48"
+                className="bg-[#181920] border border-[#3b3c4f] rounded-lg px-3 py-1.5 text-xs font-mono text-white outline-none focus:border-[#5865F2] w-48"
               />
             )}
             <button
               onClick={fetchChannels}
               title="Odśwież kanały"
-              className="p-1 hover:bg-[#35373c] rounded text-neutral-400 hover:text-white"
+              className="p-1.5 hover:bg-[#292a38] rounded-lg text-neutral-400 hover:text-white transition-colors cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loadingChannels ? 'animate-spin' : ''}`} />
             </button>
@@ -741,7 +719,7 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
                 navigator.clipboard.writeText(v);
               }}
               title="Kliknij, aby skopiować"
-              className="px-2 py-0.5 rounded bg-[#1e1f22] hover:bg-[#35373c] border border-[#383a40] text-indigo-300 font-mono text-[10px] cursor-pointer"
+              className="px-2.5 py-1 rounded-lg bg-[#181920] hover:bg-[#282936] border border-[#343547] text-indigo-300 font-mono text-[10px] font-bold cursor-pointer transition-colors"
             >
               {v}
             </button>
@@ -749,22 +727,31 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
         </div>
       </div>
 
-      {/* Main Workspace (Split View: Tree Builder on Left, Live Discord Preview on Right) */}
+      {/* Main Workspace: Tree Builder on Left, Interactive Simulator on Right */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-0 overflow-y-auto">
-        {/* LEFT COLUMN: THE AUTHENTIC COMPONENT BUILDER TREE (As shown in user screenshots) */}
-        <div className="lg:col-span-7 p-6 border-r border-[#2b2d31] space-y-6 overflow-y-auto">
+        {/* LEFT COLUMN: THE COMPONENT BUILDER TREE */}
+        <div className="lg:col-span-7 p-6 border-r border-[#282936] space-y-6 overflow-y-auto bg-[#1a1b23]">
           {/* Plain Message Box */}
           <div className="space-y-1.5">
             <label className="text-[11px] font-black uppercase tracking-wider text-neutral-400">
               Wiadomość tekstowa nad embedem (opcjonalnie)
             </label>
-            <input
-              type="text"
-              value={plainMessage}
-              onChange={(e) => setPlainMessage(e.target.value)}
-              placeholder="np. Witamy na serwerze {user}!"
-              className="w-full bg-[#2b2d31] border border-[#3b3e45] focus:border-[#5865F2] rounded-lg px-3 py-2 text-xs text-white outline-none"
-            />
+            <div className="bg-[#202128] border border-[#313242] focus-within:border-[#5865F2] rounded-xl overflow-hidden">
+              <input
+                type="text"
+                value={plainMessage}
+                onChange={(e) => setPlainMessage(e.target.value)}
+                placeholder="np. Witamy na serwerze {user}!"
+                className="w-full bg-transparent px-3.5 py-2.5 text-xs text-white outline-none"
+              />
+              <MarkdownToolbar
+                charCount={plainMessage.length}
+                maxChars={2000}
+                onInsert={(prefix, suffix = '') => {
+                  setPlainMessage((prev) => prev + prefix + suffix);
+                }}
+              />
+            </div>
           </div>
 
           {/* Root Component Tree Header */}
@@ -772,14 +759,11 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 cursor-pointer select-none">
                 <ChevronDown className="w-4 h-4 text-neutral-400" />
-                <span className="text-sm font-bold text-white">Components</span>
-                <span className="w-4 h-4 rounded-full bg-rose-500/20 text-rose-400 text-[10px] font-black flex items-center justify-center">
-                  !
-                </span>
+                <span className="text-sm font-bold text-white">Components (Kontenery Embed)</span>
                 <span className="text-xs text-neutral-400 font-mono">
                   {containers.length}/5
                 </span>
-                <span className="px-1.5 py-0.2 rounded bg-[#5865F2] text-white text-[9px] font-black uppercase tracking-wider">
+                <span className="px-2 py-0.5 rounded-full bg-[#5865F2]/20 border border-[#5865F2]/40 text-indigo-300 text-[10px] font-black uppercase tracking-wider">
                   ADVANCED
                 </span>
               </div>
@@ -792,10 +776,10 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
               return (
                 <div
                   key={container.id}
-                  className="bg-[#2b2d31] border border-[#383a40] rounded-xl overflow-hidden shadow-md space-y-0"
+                  className="bg-[#202128] border border-[#2e2f3d] rounded-2xl overflow-hidden shadow-lg space-y-0"
                 >
                   {/* Container Header Bar */}
-                  <div className="bg-[#232428] px-4 py-3 border-b border-[#313338] flex items-center justify-between select-none">
+                  <div className="bg-[#262732] px-4 py-3 border-b border-[#2e2f3d] flex items-center justify-between select-none">
                     <div
                       onClick={() => toggleNode(container.id)}
                       className="flex items-center gap-2 cursor-pointer flex-1"
@@ -805,15 +789,18 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
                       ) : (
                         <ChevronRight className="w-4 h-4 text-neutral-400" />
                       )}
-                      <span className="text-xs font-bold text-white">Container</span>
-                      <span className="w-3.5 h-3.5 rounded-full bg-rose-500 text-white text-[9px] font-black flex items-center justify-center">
-                        !
+                      <div
+                        className="w-3 h-3 rounded-full border border-white/20"
+                        style={{ backgroundColor: container.color || '#5865F2' }}
+                      />
+                      <span className="text-xs font-black text-white">Kontener #{cIdx + 1}</span>
+                      <span className="text-xs text-neutral-400">
+                        ({container.components.length} komponentów)
                       </span>
-                      <span className="text-xs text-neutral-400">- Text</span>
                     </div>
 
                     {/* Actions: Up, Down, Duplicate, Delete */}
-                    <div className="flex items-center gap-1.5 text-neutral-400">
+                    <div className="flex items-center gap-1 text-neutral-400">
                       <button
                         onClick={() => moveContainer(cIdx, -1)}
                         disabled={cIdx === 0}
@@ -851,10 +838,10 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
                   {isContainerOpen && (
                     <div className="p-4 space-y-4">
                       {/* COLOR ROW */}
-                      <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center justify-between gap-4 pb-3 border-b border-[#2d2e3c]">
                         <div className="space-y-1">
                           <label className="text-[10px] font-black uppercase tracking-wider text-neutral-400">
-                            COLOR
+                            Pasek Koloru (Embed Color)
                           </label>
                           <div className="flex items-center gap-2">
                             <div className="relative flex items-center">
@@ -864,21 +851,21 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
                                 value={container.color.replace('#', '')}
                                 onChange={(e) => updateContainerColor(cIdx, `#${e.target.value.replace('#', '')}`)}
                                 placeholder="rrggbb"
-                                className="w-28 bg-[#1e1f22] border border-[#383a40] rounded-md pl-6 pr-2 py-1.5 text-xs font-mono text-white outline-none focus:border-[#5865F2]"
+                                className="w-28 bg-[#181920] border border-[#383948] rounded-lg pl-6 pr-2 py-1.5 text-xs font-mono text-white outline-none focus:border-[#5865F2]"
                               />
                             </div>
                             <input
                               type="color"
                               value={container.color.startsWith('#') ? container.color : '#5865F2'}
                               onChange={(e) => updateContainerColor(cIdx, e.target.value)}
-                              className="w-8 h-8 rounded border border-[#383a40] bg-transparent cursor-pointer"
+                              className="w-8 h-8 rounded-lg border border-[#383948] bg-transparent cursor-pointer"
                             />
                           </div>
                         </div>
 
                         <div className="space-y-1 text-right">
                           <label className="text-[10px] font-black uppercase tracking-wider text-neutral-400 block">
-                            SPOILER
+                            Ukryj jako Spoiler
                           </label>
                           <input
                             type="checkbox"
@@ -890,23 +877,19 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
                       </div>
 
                       {/* Nested Components Header */}
-                      <div className="space-y-2 pt-2 border-t border-[#383a40]">
-                        <div className="flex items-center gap-2 select-none">
-                          <ChevronDown className="w-3.5 h-3.5 text-neutral-400" />
-                          <span className="text-xs font-bold text-white">Components</span>
-                          <span className="w-3 h-3 rounded-full bg-rose-500 text-white text-[8px] font-black flex items-center justify-center">
-                            !
-                          </span>
-                          <span className="text-xs text-neutral-400 font-mono">
-                            {container.components.length}/10
+                      <div className="space-y-3 pt-1">
+                        <div className="flex items-center justify-between text-xs font-bold text-neutral-300">
+                          <span className="uppercase tracking-wider text-[11px]">
+                            Komponenty wewnątrz ({container.components.length}/10)
                           </span>
                         </div>
 
                         {/* Components Tree items inside this Container */}
-                        <div className="space-y-2 pl-2 border-l border-[#383a40]">
+                        <div className="space-y-3">
                           {container.components.map((comp, compIdx) => {
                             const isCompOpen = expandedNodes[comp.id] !== false;
 
+                            // 1. SECTION
                             if (comp.type === 'section') {
                               const sec = comp as ComponentSection;
                               const accUrl = sec.accessory?.url || '';
@@ -915,24 +898,23 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
                               return (
                                 <div
                                   key={sec.id}
-                                  className="bg-[#232428] border border-[#313338] rounded-lg overflow-hidden"
+                                  className="bg-[#181920] border border-[#2d2e3c] rounded-xl overflow-hidden"
                                 >
                                   {/* Section Header */}
-                                  <div className="px-3 py-2 flex items-center justify-between select-none">
+                                  <div className="p-3 bg-[#23242e] flex items-center justify-between select-none border-b border-[#2d2e3c]">
                                     <div
                                       onClick={() => toggleNode(sec.id)}
                                       className="flex items-center gap-2 cursor-pointer flex-1"
                                     >
                                       {isCompOpen ? (
-                                        <ChevronDown className="w-3.5 h-3.5 text-neutral-400" />
+                                        <ChevronDown className="w-4 h-4 text-neutral-400" />
                                       ) : (
-                                        <ChevronRight className="w-3.5 h-3.5 text-neutral-400" />
+                                        <ChevronRight className="w-4 h-4 text-neutral-400" />
                                       )}
-                                      <span className="text-xs font-bold text-white">Section</span>
-                                      <span className="w-3 h-3 rounded-full bg-rose-500 text-white text-[8px] font-black flex items-center justify-center">
-                                        !
+                                      <span className="text-xs font-black text-white">📄 Section (Sekcja)</span>
+                                      <span className="text-xs text-neutral-400">
+                                        - {sec.texts.length} akapitów tekstu
                                       </span>
-                                      <span className="text-xs text-neutral-400">- Text</span>
                                     </div>
 
                                     <div className="flex items-center gap-1 text-neutral-400">
@@ -941,407 +923,305 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
                                         disabled={compIdx === 0}
                                         className="p-1 hover:text-white disabled:opacity-20 cursor-pointer"
                                       >
-                                        <ChevronUp className="w-3 h-3" />
+                                        <ChevronUp className="w-3.5 h-3.5" />
                                       </button>
                                       <button
                                         onClick={() => moveSubComponent(cIdx, compIdx, 1)}
                                         disabled={compIdx === container.components.length - 1}
                                         className="p-1 hover:text-white disabled:opacity-20 cursor-pointer"
                                       >
-                                        <ChevronDown className="w-3 h-3" />
+                                        <ChevronDown className="w-3.5 h-3.5" />
                                       </button>
                                       <button
                                         onClick={() => duplicateSubComponent(cIdx, compIdx)}
                                         className="p-1 hover:text-white cursor-pointer"
                                       >
-                                        <Copy className="w-3 h-3" />
+                                        <Copy className="w-3.5 h-3.5" />
                                       </button>
                                       <button
                                         onClick={() => removeSubComponent(cIdx, compIdx)}
                                         className="p-1 hover:text-rose-400 cursor-pointer"
                                       >
-                                        <Trash2 className="w-3 h-3" />
+                                        <Trash2 className="w-3.5 h-3.5" />
                                       </button>
                                     </div>
                                   </div>
 
-                                  {/* Section Body (Matching Image 2) */}
+                                  {/* Section Body */}
                                   {isCompOpen && (
-                                    <div className="p-3 border-t border-[#2b2d31] space-y-3 bg-[#1e1f22]">
-                                      {/* ACCESSORY TYPE */}
-                                      <div className="space-y-1">
-                                        <label className="text-[10px] font-black uppercase tracking-wider text-neutral-400">
-                                          ACCESSORY TYPE
-                                        </label>
-                                        <select
-                                          value={sec.accessory?.type || 'None'}
-                                          onChange={(e) =>
-                                            updateSectionAccessory(cIdx, compIdx, {
-                                              type: e.target.value as any,
-                                            })
-                                          }
-                                          className="w-full bg-[#2b2d31] border border-[#383a40] rounded-md px-3 py-1.5 text-xs text-white outline-none focus:border-[#5865F2]"
-                                        >
-                                          <option value="None">None</option>
-                                          <option value="Thumbnail">Thumbnail (Miniatura)</option>
-                                          <option value="Image">Image (Duży baner)</option>
-                                        </select>
-                                      </div>
-
+                                    <div className="p-4 space-y-4">
                                       {/* Accessory Box */}
-                                      {sec.accessory && sec.accessory.type !== 'None' && (
-                                        <div className="p-3 rounded-lg bg-[#232428] border border-[#313338] space-y-2">
-                                          <div className="flex items-center gap-1 text-xs font-bold text-white">
-                                            <ChevronDown className="w-3.5 h-3.5 text-neutral-400" />
-                                            <span>Accessory</span>
-                                            <span className="w-3 h-3 rounded-full bg-rose-500 text-white text-[8px] font-black flex items-center justify-center">
-                                              !
-                                            </span>
-                                          </div>
+                                      <div className="p-3.5 bg-[#202129] rounded-xl border border-[#323342] space-y-3">
+                                        <div className="flex items-center justify-between">
+                                          <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-300">
+                                            Załącznik wizualny (Accessory)
+                                          </label>
+                                          <select
+                                            value={sec.accessory?.type || 'None'}
+                                            onChange={(e) =>
+                                              updateSectionAccessory(cIdx, compIdx, {
+                                                type: e.target.value as any,
+                                              })
+                                            }
+                                            className="bg-[#181920] border border-[#383948] rounded-lg px-2.5 py-1 text-xs text-white font-semibold outline-none"
+                                          >
+                                            <option value="None">Brak (None)</option>
+                                            <option value="Thumbnail">Miniatura po prawej (Thumbnail)</option>
+                                            <option value="Image">Duży baner na dole (Image)</option>
+                                          </select>
+                                        </div>
 
-                                          <div className="flex items-center justify-between gap-4">
-                                            <div className="space-y-1 flex-1">
-                                              <label className="text-[10px] font-black uppercase tracking-wider text-neutral-400">
-                                                FILE URL
-                                              </label>
-                                              <input
-                                                type="text"
-                                                value={accUrl}
-                                                onChange={(e) =>
-                                                  updateSectionAccessory(cIdx, compIdx, {
-                                                    url: e.target.value,
-                                                  })
-                                                }
-                                                placeholder="https://..."
-                                                className="w-full bg-[#1e1f22] border border-[#383a40] focus:border-[#5865F2] rounded px-2.5 py-1 text-xs font-mono text-white outline-none"
-                                              />
-                                              {!isAccValid && (
-                                                <span className="text-[10px] text-rose-400 font-bold flex items-center gap-1 mt-0.5">
-                                                  ❗ Invalid URL
-                                                </span>
-                                              )}
-                                            </div>
-
-                                            <div className="space-y-1 text-right">
-                                              <label className="text-[10px] font-black uppercase tracking-wider text-neutral-400 block">
-                                                SPOILER
-                                              </label>
-                                              <input
-                                                type="checkbox"
-                                                checked={Boolean(sec.accessory.spoiler)}
-                                                onChange={(e) =>
-                                                  updateSectionAccessory(cIdx, compIdx, {
-                                                    spoiler: e.target.checked,
-                                                  })
-                                                }
-                                                className="w-4 h-4 rounded accent-[#5865F2] cursor-pointer"
-                                              />
-                                            </div>
-                                          </div>
-
-                                          <div className="space-y-1">
-                                            <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-wider text-neutral-400">
-                                              <span>DESCRIPTION</span>
-                                              <span className="font-mono">
-                                                {(sec.accessory.description || '').length} / 80
-                                              </span>
-                                            </div>
+                                        {sec.accessory && sec.accessory.type !== 'None' && (
+                                          <div className="space-y-2 pt-1">
                                             <input
-                                              type="text"
-                                              maxLength={80}
-                                              value={sec.accessory.description || ''}
+                                              type="url"
+                                              value={sec.accessory.url || ''}
                                               onChange={(e) =>
-                                                updateSectionAccessory(cIdx, compIdx, {
-                                                  description: e.target.value,
-                                                })
+                                                updateSectionAccessory(cIdx, compIdx, { url: e.target.value })
                                               }
-                                              placeholder="Opis / alt text"
-                                              className="w-full bg-[#1e1f22] border border-[#383a40] focus:border-[#5865F2] rounded px-2.5 py-1 text-xs text-white outline-none"
+                                              placeholder="Wklej URL obrazu (np. https://...)"
+                                              className="w-full bg-[#181920] border border-[#383948] rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-[#5865F2]"
                                             />
                                           </div>
-                                        </div>
-                                      )}
+                                        )}
+                                      </div>
 
-                                      {/* Nested Text Displays inside Section (Image 2) */}
-                                      <div className="space-y-2">
-                                        <div className="flex items-center gap-2 text-xs font-bold text-neutral-300">
-                                          <ChevronDown className="w-3.5 h-3.5 text-neutral-400" />
-                                          <span>Components</span>
-                                          <span className="font-mono text-neutral-400">
-                                            {sec.texts.length} / 3
-                                          </span>
+                                      {/* Texts List */}
+                                      <div className="space-y-3">
+                                        <div className="flex items-center justify-between text-xs font-bold text-neutral-300">
+                                          <span>Akapity Tekstu ({sec.texts.length}/3)</span>
+                                          {sec.texts.length < 3 && (
+                                            <button
+                                              type="button"
+                                              onClick={() => addSectionText(cIdx, compIdx)}
+                                              className="text-[11px] text-[#5865F2] hover:underline font-bold cursor-pointer"
+                                            >
+                                              + Dodaj akapit
+                                            </button>
+                                          )}
                                         </div>
 
-                                        {sec.texts.map((txt, tIdx) => (
+                                        {sec.texts.map((t, tIdx) => (
                                           <div
-                                            key={txt.id}
-                                            className="p-3 bg-[#232428] rounded-lg border border-[#313338] space-y-2"
+                                            key={t.id}
+                                            className="bg-[#202129] border border-[#323342] rounded-xl overflow-hidden focus-within:border-[#5865F2]"
                                           >
-                                            <div className="flex items-center justify-between text-xs text-neutral-300">
-                                              <div className="flex items-center gap-1.5">
-                                                <ChevronDown className="w-3.5 h-3.5 text-neutral-400" />
-                                                <span className="font-bold text-white">
-                                                  Text Display
-                                                </span>
-                                                <span className="text-[11px] text-neutral-400 truncate max-w-[200px]">
-                                                  - {txt.content.slice(0, 24)}...
-                                                </span>
-                                              </div>
-                                            </div>
-
-                                            <div className="space-y-1">
-                                              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-wider text-neutral-400">
-                                                <span>CONTENT</span>
-                                                <span className="font-mono">
-                                                  {txt.content.length} / 4000
-                                                </span>
-                                              </div>
-                                              <textarea
-                                                rows={3}
-                                                maxLength={4000}
-                                                value={txt.content}
-                                                onChange={(e) =>
-                                                  updateSectionText(cIdx, compIdx, tIdx, e.target.value)
-                                                }
-                                                className="w-full bg-[#1e1f22] border border-[#383a40] focus:border-[#5865F2] rounded p-2.5 text-xs text-white outline-none font-mono resize-y"
-                                              />
-                                            </div>
+                                            <textarea
+                                              value={t.content}
+                                              onChange={(e) =>
+                                                updateSectionText(cIdx, compIdx, tIdx, e.target.value)
+                                              }
+                                              rows={3}
+                                              maxLength={4000}
+                                              placeholder="Treść akapitu tekstu..."
+                                              className="w-full bg-transparent p-3 text-xs text-white outline-none resize-y leading-relaxed font-sans"
+                                            />
+                                            <MarkdownToolbar
+                                              charCount={t.content.length}
+                                              maxChars={4000}
+                                              onInsert={(prefix, suffix = '') => {
+                                                updateSectionText(
+                                                  cIdx,
+                                                  compIdx,
+                                                  tIdx,
+                                                  t.content + prefix + suffix
+                                                );
+                                              }}
+                                            />
                                           </div>
                                         ))}
-
-                                        {/* Buttons: Add Text, Clear Texts */}
-                                        <div className="flex items-center gap-2 pt-1">
-                                          <button
-                                            onClick={() => addSectionText(cIdx, compIdx)}
-                                            disabled={sec.texts.length >= 3}
-                                            className="px-3 py-1.5 bg-[#5865F2] hover:bg-[#4752C4] text-white rounded text-xs font-bold transition-colors cursor-pointer disabled:opacity-40"
-                                          >
-                                            Add Text
-                                          </button>
-                                          <button
-                                            onClick={() => clearSectionTexts(cIdx, compIdx)}
-                                            className="px-3 py-1.5 bg-transparent hover:bg-rose-500/10 border border-rose-500/60 text-rose-400 rounded text-xs font-bold transition-colors cursor-pointer"
-                                          >
-                                            Clear Texts
-                                          </button>
-                                        </div>
                                       </div>
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            } else if (comp.type === 'separator') {
-                              const sep = comp as ComponentSeparator;
-
-                              return (
-                                <div
-                                  key={sep.id}
-                                  className="bg-[#232428] border border-[#313338] rounded-lg overflow-hidden"
-                                >
-                                  <div className="px-3 py-2 flex items-center justify-between select-none">
-                                    <div
-                                      onClick={() => toggleNode(sep.id)}
-                                      className="flex items-center gap-2 cursor-pointer flex-1"
-                                    >
-                                      {isCompOpen ? (
-                                        <ChevronDown className="w-3.5 h-3.5 text-neutral-400" />
-                                      ) : (
-                                        <ChevronRight className="w-3.5 h-3.5 text-neutral-400" />
-                                      )}
-                                      <span className="text-xs font-bold text-white">Separator</span>
-                                    </div>
-
-                                    <div className="flex items-center gap-1 text-neutral-400">
-                                      <button
-                                        onClick={() => moveSubComponent(cIdx, compIdx, -1)}
-                                        disabled={compIdx === 0}
-                                        className="p-1 hover:text-white disabled:opacity-20 cursor-pointer"
-                                      >
-                                        <ChevronUp className="w-3 h-3" />
-                                      </button>
-                                      <button
-                                        onClick={() => moveSubComponent(cIdx, compIdx, 1)}
-                                        disabled={compIdx === container.components.length - 1}
-                                        className="p-1 hover:text-white disabled:opacity-20 cursor-pointer"
-                                      >
-                                        <ChevronDown className="w-3 h-3" />
-                                      </button>
-                                      <button
-                                        onClick={() => duplicateSubComponent(cIdx, compIdx)}
-                                        className="p-1 hover:text-white cursor-pointer"
-                                      >
-                                        <Copy className="w-3 h-3" />
-                                      </button>
-                                      <button
-                                        onClick={() => removeSubComponent(cIdx, compIdx)}
-                                        className="p-1 hover:text-rose-400 cursor-pointer"
-                                      >
-                                        <Trash2 className="w-3 h-3" />
-                                      </button>
-                                    </div>
-                                  </div>
-
-                                  {/* Separator Body (Image 2) */}
-                                  {isCompOpen && (
-                                    <div className="p-3 border-t border-[#2b2d31] bg-[#1e1f22] flex items-center justify-between gap-4">
-                                      <div className="space-y-1 flex-1">
-                                        <label className="text-[10px] font-black uppercase tracking-wider text-neutral-400">
-                                          SPACING
-                                        </label>
-                                        <select
-                                          value={sep.spacing}
-                                          onChange={(e) =>
-                                            updateSeparator(cIdx, compIdx, {
-                                              spacing: e.target.value as any,
-                                            })
-                                          }
-                                          className="w-full bg-[#2b2d31] border border-[#383a40] rounded-md px-3 py-1.5 text-xs text-white outline-none focus:border-[#5865F2]"
-                                        >
-                                          <option value="Small">Small</option>
-                                          <option value="Medium">Medium</option>
-                                          <option value="Large">Large</option>
-                                        </select>
-                                      </div>
-
-                                      <div className="space-y-1 text-right">
-                                        <label className="text-[10px] font-black uppercase tracking-wider text-neutral-400 block">
-                                          DIVIDER
-                                        </label>
-                                        <input
-                                          type="checkbox"
-                                          checked={Boolean(sep.divider)}
-                                          onChange={(e) =>
-                                            updateSeparator(cIdx, compIdx, {
-                                              divider: e.target.checked,
-                                            })
-                                          }
-                                          className="w-4 h-4 rounded accent-[#5865F2] cursor-pointer"
-                                        />
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            } else if (comp.type === 'action_row') {
-                              const row = comp as ComponentActionRow;
-
-                              return (
-                                <div
-                                  key={row.id}
-                                  className="bg-[#232428] border border-[#313338] rounded-lg overflow-hidden"
-                                >
-                                  <div className="px-3 py-2 flex items-center justify-between select-none">
-                                    <div
-                                      onClick={() => toggleNode(row.id)}
-                                      className="flex items-center gap-2 cursor-pointer flex-1"
-                                    >
-                                      {isCompOpen ? (
-                                        <ChevronDown className="w-3.5 h-3.5 text-neutral-400" />
-                                      ) : (
-                                        <ChevronRight className="w-3.5 h-3.5 text-neutral-400" />
-                                      )}
-                                      <span className="text-xs font-bold text-white">Action Row</span>
-                                      <span className="text-xs text-neutral-400">- Buttons ({row.buttons.length}/5)</span>
-                                    </div>
-
-                                    <div className="flex items-center gap-1 text-neutral-400">
-                                      <button
-                                        onClick={() => moveSubComponent(cIdx, compIdx, -1)}
-                                        disabled={compIdx === 0}
-                                        className="p-1 hover:text-white disabled:opacity-20 cursor-pointer"
-                                      >
-                                        <ChevronUp className="w-3 h-3" />
-                                      </button>
-                                      <button
-                                        onClick={() => moveSubComponent(cIdx, compIdx, 1)}
-                                        disabled={compIdx === container.components.length - 1}
-                                        className="p-1 hover:text-white disabled:opacity-20 cursor-pointer"
-                                      >
-                                        <ChevronDown className="w-3 h-3" />
-                                      </button>
-                                      <button
-                                        onClick={() => duplicateSubComponent(cIdx, compIdx)}
-                                        className="p-1 hover:text-white cursor-pointer"
-                                      >
-                                        <Copy className="w-3 h-3" />
-                                      </button>
-                                      <button
-                                        onClick={() => removeSubComponent(cIdx, compIdx)}
-                                        className="p-1 hover:text-rose-400 cursor-pointer"
-                                      >
-                                        <Trash2 className="w-3 h-3" />
-                                      </button>
-                                    </div>
-                                  </div>
-
-                                  {isCompOpen && (
-                                    <div className="p-3 border-t border-[#2b2d31] bg-[#1e1f22] space-y-3">
-                                      {row.buttons.map((btn, bIdx) => (
-                                        <div
-                                          key={btn.id}
-                                          className="p-2.5 bg-[#232428] rounded border border-[#313338] grid grid-cols-1 sm:grid-cols-4 gap-2 items-center"
-                                        >
-                                          <input
-                                            type="text"
-                                            value={btn.label}
-                                            onChange={(e) =>
-                                              updateRowButton(cIdx, compIdx, bIdx, {
-                                                label: e.target.value,
-                                              })
-                                            }
-                                            placeholder="Napis przycisku"
-                                            className="bg-[#1e1f22] border border-[#383a40] rounded px-2 py-1 text-xs text-white"
-                                          />
-                                          <select
-                                            value={btn.style}
-                                            onChange={(e) =>
-                                              updateRowButton(cIdx, compIdx, bIdx, {
-                                                style: e.target.value as any,
-                                              })
-                                            }
-                                            className="bg-[#1e1f22] border border-[#383a40] rounded px-2 py-1 text-xs text-white"
-                                          >
-                                            <option value="PRIMARY">Primary (Niebieski)</option>
-                                            <option value="SECONDARY">Secondary (Szary)</option>
-                                            <option value="SUCCESS">Success (Zielony)</option>
-                                            <option value="DANGER">Danger (Czerwony)</option>
-                                            <option value="LINK">Link (URL)</option>
-                                          </select>
-                                          <input
-                                            type="text"
-                                            value={btn.style === 'LINK' ? btn.url || '' : btn.customId || ''}
-                                            onChange={(e) =>
-                                              updateRowButton(cIdx, compIdx, bIdx, {
-                                                url: btn.style === 'LINK' ? e.target.value : undefined,
-                                                customId: btn.style !== 'LINK' ? e.target.value : undefined,
-                                              })
-                                            }
-                                            placeholder={btn.style === 'LINK' ? 'https://...' : 'ID przycisku'}
-                                            className="bg-[#1e1f22] border border-[#383a40] rounded px-2 py-1 text-xs text-white font-mono"
-                                          />
-                                          <div className="flex items-center justify-end">
-                                            <button
-                                              onClick={() => removeRowButton(cIdx, compIdx, bIdx)}
-                                              className="p-1 text-neutral-400 hover:text-rose-400"
-                                            >
-                                              <Trash2 className="w-3.5 h-3.5" />
-                                            </button>
-                                          </div>
-                                        </div>
-                                      ))}
-
-                                      <button
-                                        onClick={() => addRowButton(cIdx, compIdx)}
-                                        disabled={row.buttons.length >= 5}
-                                        className="px-3 py-1 bg-[#5865F2] hover:bg-[#4752C4] text-white rounded text-xs font-bold"
-                                      >
-                                        + Dodaj przycisk ({row.buttons.length}/5)
-                                      </button>
                                     </div>
                                   )}
                                 </div>
                               );
                             }
+
+                            // 2. SEPARATOR
+                            if (comp.type === 'separator') {
+                              const sep = comp as ComponentSeparator;
+
+                              return (
+                                <div
+                                  key={sep.id}
+                                  className="bg-[#181920] border border-[#2d2e3c] rounded-xl p-3 flex items-center justify-between gap-4"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <Minus className="w-4 h-4 text-neutral-400" />
+                                    <span className="text-xs font-bold text-white">➖ Separator</span>
+                                    <div className="flex items-center gap-1 bg-[#23242e] p-1 rounded-lg border border-[#383948]">
+                                      {(['Small', 'Medium', 'Large'] as const).map((s) => (
+                                        <button
+                                          key={s}
+                                          type="button"
+                                          onClick={() => updateSeparator(cIdx, compIdx, { spacing: s })}
+                                          className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors cursor-pointer ${
+                                            sep.spacing === s
+                                              ? 'bg-[#5865F2] text-white'
+                                              : 'text-neutral-400 hover:text-white'
+                                          }`}
+                                        >
+                                          {s}
+                                        </button>
+                                      ))}
+                                    </div>
+                                    <label className="flex items-center gap-1.5 text-xs text-neutral-300 cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={Boolean(sep.divider)}
+                                        onChange={(e) =>
+                                          updateSeparator(cIdx, compIdx, { divider: e.target.checked })
+                                        }
+                                        className="accent-[#5865F2] rounded"
+                                      />
+                                      <span>Kreska (Divider)</span>
+                                    </label>
+                                  </div>
+
+                                  <button
+                                    onClick={() => removeSubComponent(cIdx, compIdx)}
+                                    className="p-1 hover:text-rose-400 text-neutral-400 cursor-pointer"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              );
+                            }
+
+                            // 3. ACTION ROW
+                            if (comp.type === 'action_row') {
+                              const row = comp as ComponentActionRow;
+
+                              return (
+                                <div
+                                  key={row.id}
+                                  className="bg-[#181920] border border-[#2d2e3c] rounded-xl overflow-hidden"
+                                >
+                                  {/* Header */}
+                                  <div className="p-3 bg-[#23242e] flex items-center justify-between select-none border-b border-[#2d2e3c]">
+                                    <div
+                                      onClick={() => toggleNode(row.id)}
+                                      className="flex items-center gap-2 cursor-pointer flex-1"
+                                    >
+                                      {isCompOpen ? (
+                                        <ChevronDown className="w-4 h-4 text-neutral-400" />
+                                      ) : (
+                                        <ChevronRight className="w-4 h-4 text-neutral-400" />
+                                      )}
+                                      <span className="text-xs font-black text-white">
+                                        🔘 Action Row ({row.rowType === 'select_menu' ? 'Menu Rozwijane' : 'Przyciski'})
+                                      </span>
+                                    </div>
+
+                                    <div className="flex items-center gap-1 text-neutral-400">
+                                      <button
+                                        onClick={() => moveSubComponent(cIdx, compIdx, -1)}
+                                        disabled={compIdx === 0}
+                                        className="p-1 hover:text-white disabled:opacity-20 cursor-pointer"
+                                      >
+                                        <ChevronUp className="w-3.5 h-3.5" />
+                                      </button>
+                                      <button
+                                        onClick={() => moveSubComponent(cIdx, compIdx, 1)}
+                                        disabled={compIdx === container.components.length - 1}
+                                        className="p-1 hover:text-white disabled:opacity-20 cursor-pointer"
+                                      >
+                                        <ChevronDown className="w-3.5 h-3.5" />
+                                      </button>
+                                      <button
+                                        onClick={() => duplicateSubComponent(cIdx, compIdx)}
+                                        className="p-1 hover:text-white cursor-pointer"
+                                      >
+                                        <Copy className="w-3.5 h-3.5" />
+                                      </button>
+                                      <button
+                                        onClick={() => removeSubComponent(cIdx, compIdx)}
+                                        className="p-1 hover:text-rose-400 cursor-pointer"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  {/* Body */}
+                                  {isCompOpen && (
+                                    <div className="p-4">
+                                      <ActionRowEditor
+                                        row={row}
+                                        onChange={(patch) => updateActionRow(cIdx, compIdx, patch)}
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            }
+
+                            // 4. MEDIA BANNER
+                            if (comp.type === 'media') {
+                              const media = comp as ComponentMedia;
+
+                              return (
+                                <div
+                                  key={media.id}
+                                  className="bg-[#181920] border border-[#2d2e3c] rounded-xl overflow-hidden"
+                                >
+                                  <div className="p-3 bg-[#23242e] flex items-center justify-between select-none border-b border-[#2d2e3c]">
+                                    <div
+                                      onClick={() => toggleNode(media.id)}
+                                      className="flex items-center gap-2 cursor-pointer flex-1"
+                                    >
+                                      {isCompOpen ? (
+                                        <ChevronDown className="w-4 h-4 text-neutral-400" />
+                                      ) : (
+                                        <ChevronRight className="w-4 h-4 text-neutral-400" />
+                                      )}
+                                      <span className="text-xs font-black text-white">
+                                        🖼️ Media (Baner Graficzny)
+                                      </span>
+                                    </div>
+
+                                    <div className="flex items-center gap-1 text-neutral-400">
+                                      <button
+                                        onClick={() => moveSubComponent(cIdx, compIdx, -1)}
+                                        disabled={compIdx === 0}
+                                        className="p-1 hover:text-white disabled:opacity-20 cursor-pointer"
+                                      >
+                                        <ChevronUp className="w-3.5 h-3.5" />
+                                      </button>
+                                      <button
+                                        onClick={() => moveSubComponent(cIdx, compIdx, 1)}
+                                        disabled={compIdx === container.components.length - 1}
+                                        className="p-1 hover:text-white disabled:opacity-20 cursor-pointer"
+                                      >
+                                        <ChevronDown className="w-3.5 h-3.5" />
+                                      </button>
+                                      <button
+                                        onClick={() => duplicateSubComponent(cIdx, compIdx)}
+                                        className="p-1 hover:text-white cursor-pointer"
+                                      >
+                                        <Copy className="w-3.5 h-3.5" />
+                                      </button>
+                                      <button
+                                        onClick={() => removeSubComponent(cIdx, compIdx)}
+                                        className="p-1 hover:text-rose-400 cursor-pointer"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  {isCompOpen && (
+                                    <div className="p-4">
+                                      <MediaEditor
+                                        media={media}
+                                        onChange={(patch) => updateMedia(cIdx, compIdx, patch)}
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            }
+
                             return null;
                           })}
                         </div>
@@ -1353,31 +1233,37 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
                               onClick={() =>
                                 setShowAddMenu(showAddMenu === container.id ? null : container.id)
                               }
-                              className="px-3 py-1.5 bg-[#5865F2] hover:bg-[#4752C4] text-white rounded-md text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                              className="px-3.5 py-2 bg-[#5865F2] hover:bg-[#4752C4] active:scale-95 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-md shadow-indigo-950/40"
                             >
-                              <span>Add Component</span>
+                              <span>+ Dodaj Komponent</span>
                               <ChevronUp className="w-3.5 h-3.5" />
                             </button>
 
                             {showAddMenu === container.id && (
-                              <div className="absolute left-0 bottom-full mb-1 bg-[#232428] border border-[#383a40] rounded-lg shadow-2xl p-1.5 w-44 z-30 space-y-1 animate-in fade-in zoom-in-95">
+                              <div className="absolute left-0 bottom-full mb-1.5 bg-[#202128] border border-[#343547] rounded-xl shadow-2xl p-1.5 w-52 z-30 space-y-1 animate-in fade-in zoom-in-95">
                                 <button
                                   onClick={() => addSubComponent(cIdx, 'section')}
-                                  className="w-full text-left px-3 py-1.5 rounded hover:bg-[#35373c] text-xs font-bold text-white flex items-center gap-2"
+                                  className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#2c2d3b] text-xs font-bold text-white flex items-center gap-2 cursor-pointer transition-colors"
                                 >
                                   <span>📄 Section (Tekst + Grafika)</span>
                                 </button>
                                 <button
                                   onClick={() => addSubComponent(cIdx, 'separator')}
-                                  className="w-full text-left px-3 py-1.5 rounded hover:bg-[#35373c] text-xs font-bold text-white flex items-center gap-2"
+                                  className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#2c2d3b] text-xs font-bold text-white flex items-center gap-2 cursor-pointer transition-colors"
                                 >
                                   <span>➖ Separator (Odstęp / Linia)</span>
                                 </button>
                                 <button
                                   onClick={() => addSubComponent(cIdx, 'action_row')}
-                                  className="w-full text-left px-3 py-1.5 rounded hover:bg-[#35373c] text-xs font-bold text-white flex items-center gap-2"
+                                  className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#2c2d3b] text-xs font-bold text-white flex items-center gap-2 cursor-pointer transition-colors"
                                 >
-                                  <span>🔘 Action Row (Przyciski)</span>
+                                  <span>🔘 Action Row (Przyciski / Menu)</span>
+                                </button>
+                                <button
+                                  onClick={() => addSubComponent(cIdx, 'media')}
+                                  className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#2c2d3b] text-xs font-bold text-white flex items-center gap-2 cursor-pointer transition-colors"
+                                >
+                                  <span>🖼️ Media (Baner Obrazkowy)</span>
                                 </button>
                               </div>
                             )}
@@ -1385,9 +1271,9 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
 
                           <button
                             onClick={() => clearSubComponents(cIdx)}
-                            className="px-3 py-1.5 bg-transparent hover:bg-rose-500/10 border border-rose-500/60 text-rose-400 rounded-md text-xs font-bold transition-colors cursor-pointer"
+                            className="px-3 py-2 bg-transparent hover:bg-rose-500/10 border border-rose-500/40 text-rose-400 rounded-xl text-xs font-bold transition-colors cursor-pointer"
                           >
-                            Clear Components
+                            Wyczyść komponenty
                           </button>
                         </div>
                       </div>
@@ -1406,168 +1292,40 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
                   setContainers((prev) => [...prev, newC]);
                 }}
                 disabled={containers.length >= 5}
-                className="px-3 py-1.5 bg-[#5865F2] hover:bg-[#4752C4] text-white rounded-md text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-40"
+                className="px-4 py-2 bg-[#262732] hover:bg-[#303140] border border-[#3b3c4f] text-white rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer disabled:opacity-40"
               >
-                <span>Add Component</span>
-                <ChevronUp className="w-3.5 h-3.5" />
+                <Layers className="w-4 h-4 text-[#5865F2]" />
+                <span>+ Dodaj Nowy Kontener Embed ({containers.length}/5)</span>
               </button>
               <button
                 onClick={() => setContainers([])}
-                className="px-3 py-1.5 bg-transparent hover:bg-rose-500/10 border border-rose-500/60 text-rose-400 rounded-md text-xs font-bold transition-colors cursor-pointer"
+                className="px-3.5 py-2 bg-transparent hover:bg-rose-500/10 border border-rose-500/40 text-rose-400 rounded-xl text-xs font-bold transition-colors cursor-pointer"
               >
-                Clear Components
+                Wyczyść wszystkie
               </button>
             </div>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: REALISTIC DISCORD LIVE CHAT PREVIEW */}
-        <div className="lg:col-span-5 p-6 bg-[#313338] overflow-y-auto space-y-4">
-          <div className="flex items-center justify-between pb-2 border-b border-[#3f4147]">
+        {/* RIGHT COLUMN: INTERACTIVE DISCORD LIVE SIMULATOR */}
+        <div className="lg:col-span-5 p-6 bg-[#202128] overflow-y-auto space-y-4 border-l border-[#282936]">
+          <div className="flex items-center justify-between pb-3 border-b border-[#2d2e3c]">
             <div className="flex items-center gap-2">
-              <Hash className="w-4 h-4 text-neutral-400" />
-              <span className="text-xs font-black uppercase text-neutral-300">
-                Podgląd na żywo Discord
+              <Sparkles className="w-4 h-4 text-[#5865F2]" />
+              <span className="text-xs font-black uppercase text-white tracking-wider">
+                Symulator Na Żywo Discord
               </span>
             </div>
-            <span className="text-[10px] text-neutral-400 font-mono">Real-time preview</span>
+            <span className="text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full font-mono font-bold">
+              ● Interaktywny
+            </span>
           </div>
 
-          {/* Discord Message Mockup */}
-          <div className="flex items-start gap-4 p-4 rounded-xl hover:bg-[#2e3035]/50 transition-colors">
-            {/* Bot Avatar */}
-            <div className="w-10 h-10 rounded-full bg-[#5865F2] flex items-center justify-center font-black text-white shrink-0 overflow-hidden shadow">
-              <img
-                src="https://cdn.discordapp.com/embed/avatars/0.png"
-                alt="Bot Avatar"
-                className="w-full h-full object-cover"
-              />
-            </div>
-
-            {/* Message Body */}
-            <div className="flex-1 min-w-0 space-y-2">
-              {/* Header: Bot Name, BOT badge, timestamp */}
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-white text-sm hover:underline cursor-pointer">
-                  KitekBot
-                </span>
-                <span className="bg-[#5865F2] text-white text-[10px] font-extrabold px-1.5 py-0.2 rounded uppercase">
-                  BOT ✓
-                </span>
-                <span className="text-neutral-400 text-xs">Dzisiaj o 12:00</span>
-              </div>
-
-              {/* Plain Message Text */}
-              {plainMessage && (
-                <div className="text-sm text-[#dbdee1] leading-relaxed whitespace-pre-wrap font-sans">
-                  {plainMessage
-                    .replace(/{user}/g, '@Użytkownik')
-                    .replace(/{server\.name}/g, guild.name)
-                    .replace(/{memberCount}/g, '142')}
-                </div>
-              )}
-
-              {/* Containers / Embed Cards Preview */}
-              {containers.map((c) => (
-                <div
-                  key={c.id}
-                  className="rounded-lg bg-[#2b2d31] border-l-4 p-4 space-y-3 shadow-md relative"
-                  style={{ borderLeftColor: c.color || '#5865F2' }}
-                >
-                  {c.components.map((comp) => {
-                    if (comp.type === 'section') {
-                      const sec = comp as ComponentSection;
-                      const hasThumb = sec.accessory?.type === 'Thumbnail' && sec.accessory.url;
-                      const hasBanner = sec.accessory?.type === 'Image' && sec.accessory.url;
-
-                      return (
-                        <div key={sec.id} className="space-y-2">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex-1 min-w-0 space-y-1.5">
-                              {sec.texts.map((t) => (
-                                <div
-                                  key={t.id}
-                                  className="text-sm text-[#dbdee1] whitespace-pre-wrap font-sans leading-relaxed"
-                                >
-                                  {t.content
-                                    .replace(/{user}/g, '@Użytkownik')
-                                    .replace(/{server\.name}/g, guild.name)
-                                    .replace(/{memberCount}/g, '142')}
-                                </div>
-                              ))}
-                            </div>
-
-                            {hasThumb && (
-                              <img
-                                src={sec.accessory!.url}
-                                alt="Thumbnail"
-                                className="w-16 h-16 rounded object-cover border border-[#383a40] shrink-0"
-                              />
-                            )}
-                          </div>
-
-                          {hasBanner && (
-                            <div className="mt-2 rounded overflow-hidden max-h-48 border border-[#383a40]">
-                              <img
-                                src={sec.accessory!.url}
-                                alt="Banner"
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                          )}
-                        </div>
-                      );
-                    } else if (comp.type === 'separator') {
-                      const sep = comp as ComponentSeparator;
-                      return (
-                        <div
-                          key={comp.id}
-                          className={`w-full ${
-                            sep.spacing === 'Large'
-                              ? 'my-3'
-                              : sep.spacing === 'Medium'
-                              ? 'my-2'
-                              : 'my-1'
-                          }`}
-                        >
-                          {sep.divider && <div className="h-[1px] bg-[#3f4147] w-full" />}
-                        </div>
-                      );
-                    } else if (comp.type === 'action_row') {
-                      const row = comp as ComponentActionRow;
-                      return (
-                        <div key={row.id} className="flex flex-wrap items-center gap-2 pt-1">
-                          {row.buttons.map((btn) => {
-                            let btnBg = 'bg-[#5865F2] hover:bg-[#4752C4] text-white';
-                            if (btn.style === 'SECONDARY')
-                              btnBg = 'bg-[#4e5058] hover:bg-[#6d6f78] text-white';
-                            if (btn.style === 'SUCCESS')
-                              btnBg = 'bg-[#248046] hover:bg-[#1a6334] text-white';
-                            if (btn.style === 'DANGER')
-                              btnBg = 'bg-[#da373c] hover:bg-[#a1282c] text-white';
-                            if (btn.style === 'LINK')
-                              btnBg = 'bg-[#4e5058] hover:bg-[#6d6f78] text-white';
-
-                            return (
-                              <div
-                                key={btn.id}
-                                className={`px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm select-none ${btnBg}`}
-                              >
-                                {btn.emoji && <span>{btn.emoji}</span>}
-                                <span>{btn.label}</span>
-                                {btn.style === 'LINK' && <ExternalLink className="w-3 h-3 opacity-70" />}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      );
-                    }
-                    return null;
-                  })}
-                </div>
-              ))}
-            </div>
-          </div>
+          <LiveDiscordSimulator
+            containers={containers}
+            plainMessage={plainMessage}
+            guildName={guild.name}
+          />
         </div>
       </div>
     </div>
