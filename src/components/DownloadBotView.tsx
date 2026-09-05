@@ -12,10 +12,22 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
+    version: "v3.5.0",
+    date: "Dzisiaj, 05.09.2026",
+    badge: "NAJNOWSZA (v3.5.0)",
+    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Wyeliminowano błąd 'Cannot find module /var/task/server' poprzez utworzenie w pełni samowystarczalnego handlera api/auth/callback.js",
+      "Dodano automatyczne bundlowanie api/auth/callback.js podczas 'npm run build' obok api/index.js",
+      "Dodano dedykowany plik źródłowy api/auth/callback.ts i src/authCallbackEntry.ts zapobiegający odwoływaniu się do nieistniejących ścieżek",
+      "Rozszerzono sekcję functions w vercel.json o dedykowany limit czasu dla api/auth/callback.js"
+    ]
+  },
+  {
     version: "v3.4.0",
     date: "Dzisiaj, 05.09.2026",
-    badge: "NAJNOWSZA (v3.4.0)",
-    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    badge: "STABILNA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Zaimplementowano dedykowany handler Vercel Serverless Function `handler(req, res)` z typami @vercel/node",
       "Dodano jawną sekcję `functions` w vercel.json z konfiguracją api/index.js oraz maxDuration: 30",
