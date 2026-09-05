@@ -12,10 +12,22 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
+    version: "v3.8.0",
+    date: "Dzisiaj, 05.09.2026",
+    badge: "NAJNOWSZA (v3.8.0)",
+    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Przeniesiono definicję handlera do src/api/authCallback.ts poza strukturę folderu api/",
+      "Skonfigurowano bundlowanie esbuild bezpośrednio z src/api/authCallback.ts do api/auth/callback.js",
+      "Dodano api/auth/callback.js do .gitignore, zapobiegając konfliktom plików w repozytorium Vercel",
+      "Vercel podczas buildu automatycznie generuje czysty plik callback.js w trakcie procesu kompilacji"
+    ]
+  },
+  {
     version: "v3.7.0",
     date: "Dzisiaj, 05.09.2026",
-    badge: "NAJNOWSZA (v3.7.0)",
-    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    badge: "STABILNA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Wyeliminowano błąd Vercel 'Two or more files have conflicting paths: api/auth/callback.js conflicts with callback.ts'",
       "Usunięto plik api/auth/callback.ts z folderu api/ i przeniesiono źródło do src/authCallbackEntry.ts",
