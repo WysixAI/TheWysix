@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { LogIn, LogOut, Plus, ShieldCheck, Crown, ExternalLink, RefreshCw, Loader2, Sparkles, Server, FolderArchive, Settings, CheckCircle2, Sliders, Bot, Radio, Wifi, WifiOff, Copy, Check, AlertCircle } from 'lucide-react';
+import { LogIn, LogOut, Plus, ShieldCheck, Crown, ExternalLink, RefreshCw, Loader2, Server, FolderArchive, Settings, CheckCircle2, Sliders, Bot, Radio, Wifi, WifiOff, Copy, Check, AlertCircle } from 'lucide-react';
 import { GuildSettingsModal } from './components/GuildSettingsModal';
 import { DownloadBotView } from './components/DownloadBotView';
 import { BotApiConnectionModal } from './components/BotApiConnectionModal';
-import { WelcomesGoodbyesView } from './components/WelcomesGoodbyesView';
 
 interface DiscordGuild {
   id: string;
@@ -628,14 +627,9 @@ export default function App() {
     }, 60000);
   };
 
-  const isWelcomes =
-    currentPath === '/PowitaniaIPozegnania' ||
-    currentPath === '/powitania-i-pozegnania' ||
-    currentPath === '/powitania' ||
-    currentPath.toLowerCase().includes('powitania');
   const isDownload = currentPath === '/download' || currentPath === '/pobierz';
   const isLogin = currentPath === '/login';
-  const isDashboard = (currentPath === '/dashboard' || (!isDownload && !isLogin && !isWelcomes)) && Boolean(user);
+  const isDashboard = (currentPath === '/dashboard' || (!isDownload && !isLogin)) && Boolean(user);
 
   const userGuildsCount = user?.guilds?.length || 0;
   const isGuildBotPresent = (guildId: string) => {
@@ -715,11 +709,11 @@ export default function App() {
       <div className="flex flex-1 w-full min-h-screen pt-16 relative">
         {/* 
           LEWY PANEL BOCZNY (SIDEBAR) - Z-INDEX 10:
-          Jest szerszy, od góry do dołu, umieszczony warstwowo pod górnym paskiem.
+          Zablokowany na stałe (fixed) - nie przesuwa się podczas przewijania zawartości strony.
         */}
         <aside
           id="left-sidebar"
-          className="w-64 sm:w-72 bg-[#32333d] border-r border-[#272831] flex flex-col justify-between z-10 shrink-0 select-none shadow-md shadow-black/10"
+          className="fixed top-16 left-0 bottom-0 w-64 sm:w-72 bg-[#32333d] border-r border-[#272831] flex flex-col justify-between z-10 shrink-0 select-none shadow-md shadow-black/10 overflow-y-auto"
         >
           <div className="p-4 flex flex-col flex-1">
             {/* KATEGORIE / PRZYCISKI W PANELU */}
@@ -760,23 +754,6 @@ export default function App() {
                       <span className="px-2 py-0.5 rounded-full bg-[#5865F2]/20 text-[#8590ff] text-xs font-black">
                         {userGuildsCount}
                       </span>
-                    </button>
-
-                    {/* Kategoria: Powitania i Pożegnania (panel.kitekbot.vercel.app/PowitaniaIPozegnania) */}
-                    <button
-                      id="category-welcomes-btn"
-                      onClick={() => navigateTo('/PowitaniaIPozegnania')}
-                      className={`w-full py-2.5 px-4 rounded-xl font-extrabold tracking-wide text-sm text-center uppercase transition-all duration-200 flex items-center justify-between cursor-pointer shadow-md ${
-                        isWelcomes
-                          ? 'bg-[#272831] text-white border border-[#5865F2]/50 shadow-indigo-950/20'
-                          : 'bg-[#272831] hover:bg-[#202128] text-neutral-300 hover:text-white border border-[#3b3c47]'
-                      }`}
-                      style={{ fontFamily: 'Montserrat, sans-serif' }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Sparkles className="w-4 h-4 shrink-0 text-amber-400" />
-                        <span className="truncate">Powitania i Pożegnania</span>
-                      </div>
                     </button>
 
                     {/* Kategoria: Pobierz Pliki */}
@@ -841,9 +818,9 @@ export default function App() {
                 </div>
               )}
 
-              {/* Kreska i napis v4.7.0 KitekBot */}
+              {/* Kreska i napis v4.8.0 KitekBot */}
               <div className="pt-3 border-t border-[#2a2b34] text-center text-xs text-neutral-400 font-medium">
-                v4.7.0 &bull; KitekBot
+                v4.8.0 &bull; KitekBot
               </div>
             </div>
           </div>
@@ -852,7 +829,7 @@ export default function App() {
         {/* GŁÓWNY OBSZAR ROBOCZY / TREŚĆ */}
         <main
           id="main-content-area"
-          className="flex-1 p-6 sm:p-10 flex flex-col relative z-0 overflow-y-auto"
+          className="flex-1 ml-64 sm:ml-72 p-6 sm:p-10 flex flex-col relative z-0 min-h-[calc(100vh-4rem)]"
         >
           {authError && (
             <div className="mb-6 max-w-2xl mx-auto w-full bg-red-500/10 border border-red-500/40 rounded-xl p-4 text-red-300 text-sm text-center">
@@ -863,12 +840,6 @@ export default function App() {
           {isDownload ? (
             /* WIDOK: POBIERZ PLIKI BOTA */
             <DownloadBotView />
-          ) : isWelcomes ? (
-            /* WIDOK: POWITANIA I POŻEGNANIA (EMBED V2 + COMPONENTS V2 + DRAG AND PUT) */
-            <WelcomesGoodbyesView
-              userGuilds={user?.guilds || []}
-              onBackToDashboard={() => navigateTo('/dashboard')}
-            />
           ) : user && isDashboard ? (
             /* WIDOK DASHBOARD: TYLKO SERWERY */
             <div className="w-full max-w-5xl mx-auto space-y-6">

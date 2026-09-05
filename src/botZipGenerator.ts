@@ -11,8 +11,8 @@ export function generateBotZip(
   // 1. package.json
   const packageJson = {
     name: "kitek-bot",
-    version: "4.7.0",
-    description: "KitekBot Discord Bot v4.7.0 — kreator Powitań i Pożegnań Embed v2, Components v2 i Drag & Put",
+    version: "4.8.0",
+    description: "KitekBot Discord Bot v4.8.0 — stabilny silnik Discord.js v14, Express API i zoptymalizowany dashboard",
     main: "index.js",
     scripts: {
       prestart: "npm install --no-audit --prefer-offline",
@@ -28,7 +28,7 @@ export function generateBotZip(
     devDependencies: {
       "nodemon": "^3.1.7"
     },
-    keywords: ["discord", "bot", "kitekbot", "dashboard", "embed-v2", "components-v2", "v4.7.0"],
+    keywords: ["discord", "bot", "kitekbot", "dashboard", "fixed-sidebar", "v4.8.0"],
     author: "KitekBot Team",
     license: "ISC"
   };

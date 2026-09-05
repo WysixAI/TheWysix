@@ -12,15 +12,25 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
+    version: "v4.8.0",
+    date: "Dzisiaj, 05.09.2026",
+    badge: "NAJNOWSZA (v4.8.0)",
+    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Zablokowano lewy pasek boczny (fixed/sticky) — panel boczny pozostaje w stałym miejscu i nie przesuwa się podczas przewijania zawartości strony oraz listy wersji bota",
+      "Usunięto kategorię Powitania i Pożegnania zgodnie z dyspozycją użytkownika",
+      "Uporządkowano układ strony i zachowano minimalistyczny, stabilny widok Dashboardu oraz Pobierz Pliki"
+    ]
+  },
+  {
     version: "v4.7.0",
     date: "Dzisiaj, 05.09.2026",
-    badge: "NAJNOWSZA (v4.7.0)",
-    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    badge: "POPRZEDNIA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Oczyszczenie interfejsu i uproszczenie paska górnego oraz bocznego (usunięto Połączenie REST, licznik serwerów i zbędne banery)",
       "Przycisk odświeżania na liście serwerów został uproszczony do czystego napisu 'Odśwież'",
-      "Przejście na bezpośredni routing URL funkcji: panel.kitekbot.vercel.app/PowitaniaIPozegnania",
-      "Dodano pełny moduł Powitania i Pożegnania z zaawansowanym kreatorem Embed v2, Components v2 (przyciski, select menu z własnymi grafikami) oraz systemem Drag & Put"
+      "Optymalizacja siatki serwerów i bezpośrednie wejście do zarządzania botem"
     ]
   },
   {

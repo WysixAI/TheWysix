@@ -1,6 +1,6 @@
 # 🐾 KitekBot Dashboard & Discord Bot
 
-> **Aktualna wersja:** `v4.7.0`  
+> **Aktualna wersja:** `v4.8.0`  
 > **Status:** Stabilna / Produkcyjna  
 > **Ostatnia aktualizacja:** 05.09.2026
 
@@ -11,7 +11,7 @@ Oficjalna strona internetowa, panel zarządzania (Dashboard) oraz zintegrowany b
 ## 📌 Zasada Wersjonowania i Aktualizacji (Versioning Policy)
 
 > **Reguła projektu:**  
-> **Każda zmiana, nowa funkcja lub poprawka na stronie internetowej lub w bocie ZAWSZE podbija wersję (np. `v4.6.0` ➔ `v4.7.0`) oraz jest automatycznie dokumentowana w pliku `README.md`, w historii zmian (Changelog w sekcji „Pobierz Pliki”) oraz w `package.json` bota.**
+> **Każda zmiana, nowa funkcja lub poprawka na stronie internetowej lub w bocie ZAWSZE podbija wersję (np. `v4.7.0` ➔ `v4.8.0`) oraz jest automatycznie dokumentowana w pliku `README.md`, w historii zmian (Changelog w sekcji „Pobierz Pliki”) oraz w `package.json` bota.**
 
 Dzięki temu użytkownik i administrator zawsze mają pewność, z której wersji korzystają i jakie zmiany zaszły w systemie.
 
@@ -19,7 +19,16 @@ Dzięki temu użytkownik i administrator zawsze mają pewność, z której wersj
 
 ## 🚀 Historia Wersji i Zmian (Changelog)
 
-### 🌟 `v4.7.0` (Najnowsza — 05.09.2026)
+### 🌟 `v4.8.0` (Najnowsza — 05.09.2026)
+- 📌 **Zablokowanie lewego paska bocznego (Fixed Sidebar)**:
+  - Lewy pasek boczny został na stałe przypięty do krawędzi ekranu (`fixed top-16 left-0 bottom-0`).
+  - Podczas przewijania listy wersji bota w „Pobierz Pliki” lub siatki serwerów w „Dashboard”, pasek boczny nie przesuwa się i pozostaje stale widoczny.
+- 🗑️ **Usunięcie modułu Powitania i Pożegnania**:
+  - Usunięto kategorię i widok z menu bocznego zgodnie z dyspozycją użytkownika, zachowując czysty, minimalistyczny układ panelu.
+
+---
+
+### `v4.7.0` (05.09.2026)
 - 🧹 **Oczyszczenie interfejsu i uproszczenie Dashboardu**:
   - Usunięto zbędną kategorię „Połączenie REST” z paska bocznego.
   - Usunięto z prawego górnego rogu widgety „Twoje serwery: X” oraz przycisk „Połącz z botem”.
