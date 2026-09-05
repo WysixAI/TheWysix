@@ -12,10 +12,24 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
+    version: "v5.0.0",
+    date: "Dzisiaj, 05.09.2026",
+    badge: "NAJNOWSZA (v5.0.0)",
+    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Usunięto moduł Ekonomia oraz pozostałe zbędne moduły, pozostawiając wyłącznie moduł Powitań",
+      "Zbudowano zaawansowany edytor wiadomości i kart Embed w stylu message.style/app/editor",
+      "Powiększono interfejs konfiguratora (duże okno z podziałem na edytor oraz realistyczny podgląd na żywo Discord)",
+      "Wsparcie dla kolorów hex i palety Discorda, sekcji autora, pól inline, miniaturek, banerów, stopki z timestampem i przycisków Action Row",
+      "Dodano gotowe szablony (Społeczność, Gaming, Minimalizm, Czysty Tekst) oraz kopiowanie surowego Discord JSON Payload",
+      "Dodano możliwość wysyłania testowej wiadomości powitalnej bezpośrednio na wybrany kanał Discord"
+    ]
+  },
+  {
     version: "v4.9.0",
     date: "Dzisiaj, 05.09.2026",
-    badge: "NAJNOWSZA (v4.9.0)",
-    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    badge: "POPRZEDNIA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Uproszczono kartę logowania — usunięto alternatywne formularze logowania nickiem/ID oraz sekcję ostrzeżenia o nieprawidłowych parametrach URL",
       "Karta logowania zawiera teraz wyłącznie jeden, czytelny przycisk 'Zaloguj się przez Discord'",

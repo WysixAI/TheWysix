@@ -390,6 +390,34 @@ app.get('/api/bot/events', (req, res) => {
     }
   });
 
+  // API: Proxy to send test welcome message to Discord via bot REST API
+  app.post('/api/bot/proxy/guilds/:id/test-welcome', async (req, res) => {
+    const guildId = req.params.id;
+    const body = req.body;
+    if (!currentBotApiUrl) {
+      return res.json({
+        success: false,
+        error: 'REST API bota nie jest jeszcze połączone z panelem. Podłącz bota w ustawieniach połączenia lub uruchom go lokalnie.',
+      });
+    }
+
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 4500);
+      const botRes = await fetch(`${currentBotApiUrl.replace(/\/$/, '')}/api/bot/guilds/${guildId}/test-welcome`, {
+        method: 'POST',
+        headers: getBotApiHeaders(),
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      const data = await botRes.json();
+      res.json(data);
+    } catch (err: any) {
+      res.json({ success: false, error: err.message || 'Błąd komunikacji z REST API bota' });
+    }
+  });
+
   // API: Sync bot guilds from external bot instance (GET & POST)
   const handleBotSyncGet = async (req: express.Request, res: express.Response) => {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');

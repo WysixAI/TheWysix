@@ -1,6 +1,6 @@
 # 🐾 KitekBot Dashboard & Discord Bot
 
-> **Aktualna wersja:** `v4.9.0`  
+> **Aktualna wersja:** `v5.0.0`  
 > **Status:** Stabilna / Produkcyjna  
 > **Ostatnia aktualizacja:** 05.09.2026
 
@@ -11,7 +11,7 @@ Oficjalna strona internetowa, panel zarządzania (Dashboard) oraz zintegrowany b
 ## 📌 Zasada Wersjonowania i Aktualizacji (Versioning Policy)
 
 > **Reguła projektu:**  
-> **Każda zmiana, nowa funkcja lub poprawka na stronie internetowej lub w bocie ZAWSZE podbija wersję (np. `v4.8.0` ➔ `v4.9.0`) oraz jest automatycznie dokumentowana w pliku `README.md`, w historii zmian (Changelog w sekcji „Pobierz Pliki”) oraz w `package.json` bota.**
+> **Każda zmiana, nowa funkcja lub poprawka na stronie internetowej lub w bocie ZAWSZE podbija wersję (np. `v4.9.0` ➔ `v5.0.0`) oraz jest automatycznie dokumentowana w pliku `README.md`, w historii zmian (Changelog w sekcji „Pobierz Pliki”) oraz w `package.json` bota.**
 
 Dzięki temu użytkownik i administrator zawsze mają pewność, z której wersji korzystają i jakie zmiany zaszły w systemie.
 
@@ -19,7 +19,32 @@ Dzięki temu użytkownik i administrator zawsze mają pewność, z której wersj
 
 ## 🚀 Historia Wersji i Zmian (Changelog)
 
-### 🌟 `v4.9.0` (Najnowsza — 05.09.2026)
+### 🌟 `v5.0.0` (Najnowsza — 05.09.2026)
+- 🧹 **Usunięcie zbędnych modułów bota**:
+  - Całkowicie usunięto moduł Ekonomia (`/daily`, monety) oraz moduły moderacji i pożegnań z bota i konfiguracji serwerów.
+  - Skupiono architekturę bota i panelu w 100% na najwyższej jakości module powitań (Welcome System).
+- 🎨 **Zaawansowany edytor powitań w stylu message.style (`https://message.style/app/editor`)**:
+  - Zbudowano kompleksowy kreator wiadomości tekstowej i bogatej karty Embed.
+  - Pełne wsparcie dla wyboru kolorów HEX oraz oficjalnej palety kolorów Discorda.
+  - Sekcje: Autor (nazwa, ikona, URL), Tytuł (z linkiem), Opis Markdown ze zmiennymi (`{user}`, `{server.name}`, `{memberCount}`).
+  - Dynamiczny edytor pól (Fields) z możliwością dodawania, usuwania i układu inline.
+  - Obsługa grafik: miniaturka (thumbnail) oraz duży baner (image).
+  - Stopka z ikoną i przełącznikiem znacznika czasu (Timestamp).
+- 🔘 **Obsługa przycisków Action Row (Components v2)**:
+  - Do 5 przycisków w wierszu pod wiadomością: Primary, Secondary, Success, Danger, Link (URL).
+  - Obsługa emoji i etykiet przycisków z automatyczną reakcją bota.
+- 📐 **Powiększenie i unowocześnienie interfejsu (Enlarged GUI)**:
+  - Zwiększono rozmiar modalnego okna konfiguratora do formatu pełnoekranowego z podziałem roboczym (Split View).
+  - Lewa strona: intuicyjny inspektor z zakładkami i pigułkami zmiennych.
+  - Prawa strona: realistyczny, renderowany na żywo podgląd wiadomości Discord (z awatarem, badge'em BOT ✓ i układem chatu).
+- ⚡ **Szybkie szablony (Presets) & testowanie na Discord**:
+  - 4 gotowe kompozycje: Nowoczesna Społeczność, Gaming & E-Sport, Elegancki Minimalizm, Czysty Tekst.
+  - Narzędzie kopiowania surowego Discord JSON Payload.
+  - Przycisk natychmiastowego wysłania wiadomości testowej bezpośrednio na kanał Discord bota.
+
+---
+
+### `v4.9.0` (05.09.2026)
 - 🔒 **Uproszczenie widoku logowania**:
   - Usunięto pole ręcznego logowania nickiem/ID oraz sekcję informującą o błędzie nieprawidłowych parametrów URL.
   - Karta logowania zawiera teraz wyłącznie jeden oficjalny przycisk: **„Zaloguj się przez Discord”**.

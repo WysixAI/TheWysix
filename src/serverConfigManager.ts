@@ -1,40 +1,22 @@
 import fs from 'fs';
 import path from 'path';
+import {
+  WelcomeEmbedField,
+  WelcomeButton,
+  WelcomeEmbed,
+  WelcomeConfig,
+  GuildConfig,
+  getDefaultWelcomeConfig,
+} from './types/guildConfig';
 
-export interface GuildConfig {
-  guildId: string;
-  guildName?: string;
-  prefix: string;
-  language: string;
-  welcome: {
-    enabled: boolean;
-    channelId: string | null;
-    message: string;
-  };
-  goodbye: {
-    enabled: boolean;
-    channelId: string | null;
-    message: string;
-  };
-  moderation: {
-    antiLink: boolean;
-    antiSpam: boolean;
-    logChannelId: string | null;
-    muteRoleId: string | null;
-  };
-  autoRole: {
-    enabled: boolean;
-    roleId: string | null;
-  };
-  economy: {
-    enabled: boolean;
-    currencyName: string;
-    dailyAmount: number;
-  };
-  embedColor: string;
-  customSettings?: Record<string, any>;
-  updatedAt: string;
-}
+export type {
+  WelcomeEmbedField,
+  WelcomeButton,
+  WelcomeEmbed,
+  WelcomeConfig,
+  GuildConfig,
+};
+export { getDefaultWelcomeConfig };
 
 const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
 const SERWERY_DIR = isServerless ? path.join('/tmp', 'Serwery') : path.join(process.cwd(), 'Serwery');
@@ -57,31 +39,7 @@ export function getDefaultConfig(guildId: string, guildName?: string): GuildConf
     guildName: guildName || `Serwer ${guildId}`,
     prefix: '!',
     language: 'pl',
-    welcome: {
-      enabled: false,
-      channelId: null,
-      message: 'Witaj {user} na serwerze {server}! Życzymy miłego pobytu 🎉',
-    },
-    goodbye: {
-      enabled: false,
-      channelId: null,
-      message: '{user} opuścił nasz serwer. Żegnaj! 👋',
-    },
-    moderation: {
-      antiLink: false,
-      antiSpam: false,
-      logChannelId: null,
-      muteRoleId: null,
-    },
-    autoRole: {
-      enabled: false,
-      roleId: null,
-    },
-    economy: {
-      enabled: true,
-      currencyName: 'Monety',
-      dailyAmount: 100,
-    },
+    welcome: getDefaultWelcomeConfig(),
     embedColor: '#5865F2',
     updatedAt: new Date().toISOString(),
   };
@@ -92,12 +50,32 @@ export function getGuildConfig(guildId: string, guildName?: string): GuildConfig
     return memoryConfigs.get(guildId)!;
   }
 
+  const defaultConf = getDefaultConfig(guildId, guildName);
   const filePath = path.join(SERWERY_DIR, `${guildId}.json`);
   try {
     if (fs.existsSync(filePath)) {
       const data = fs.readFileSync(filePath, 'utf-8');
       const parsed = JSON.parse(data);
-      const full = { ...getDefaultConfig(guildId, guildName), ...parsed, guildId };
+      const mergedWelcome: WelcomeConfig = {
+        ...defaultConf.welcome,
+        ...(parsed.welcome || {}),
+        embed: {
+          ...defaultConf.welcome.embed,
+          ...(parsed.welcome?.embed || {}),
+          fields: Array.isArray(parsed.welcome?.embed?.fields)
+            ? parsed.welcome.embed.fields
+            : defaultConf.welcome.embed.fields,
+        },
+        buttons: Array.isArray(parsed.welcome?.buttons)
+          ? parsed.welcome.buttons
+          : defaultConf.welcome.buttons,
+      };
+      const full: GuildConfig = {
+        ...defaultConf,
+        ...parsed,
+        guildId,
+        welcome: mergedWelcome,
+      };
       memoryConfigs.set(guildId, full);
       return full;
     }
@@ -106,7 +84,6 @@ export function getGuildConfig(guildId: string, guildName?: string): GuildConfig
   }
 
   // If doesn't exist, create default
-  const defaultConf = getDefaultConfig(guildId, guildName);
   saveGuildConfig(guildId, defaultConf);
   return defaultConf;
 }
