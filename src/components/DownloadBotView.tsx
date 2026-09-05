@@ -12,10 +12,25 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
+    version: "v5.1.0",
+    date: "Dzisiaj, 05.09.2026",
+    badge: "NAJNOWSZA (v5.1.0)",
+    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Wdrożono drzewiasty edytor komponentów (Component Tree Builder) ściśle według zrzutów z message.style",
+      "Dodano sekcje (Sections) z tekstem do 4000 znaków, miniaturkami (Thumbnail) i banerami (Image)",
+      "Dodano separatory (Separators) z regulacją odstępu (Small, Medium, Large) oraz kreską podziału (Divider)",
+      "Wprowadzono dynamiczne paski bocznego menu: po kliknięciu serwera pojawiają się kategorie /welcome oraz /goodbye",
+      "Po kliknięciu /dashboard kategorie serwera natychmiast znikają i następuje powrót do głównej listy",
+      "Pełne wsparcie dla modułu Pożegnań (/goodbye) w silniku bota i interfejsie webowym",
+      "Wzbogacono bota o endpoint POST /api/bot/guilds/:id/test-goodbye oraz obsługę zdarzenia guildMemberRemove"
+    ]
+  },
+  {
     version: "v5.0.0",
     date: "Dzisiaj, 05.09.2026",
-    badge: "NAJNOWSZA (v5.0.0)",
-    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    badge: "POPRZEDNIA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Usunięto moduł Ekonomia oraz pozostałe zbędne moduły, pozostawiając wyłącznie moduł Powitań",
       "Zbudowano zaawansowany edytor wiadomości i kart Embed w stylu message.style/app/editor",

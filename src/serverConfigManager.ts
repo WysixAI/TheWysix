@@ -5,8 +5,10 @@ import {
   WelcomeButton,
   WelcomeEmbed,
   WelcomeConfig,
+  GoodbyeConfig,
   GuildConfig,
   getDefaultWelcomeConfig,
+  getDefaultGoodbyeConfig,
 } from './types/guildConfig';
 
 export type {
@@ -14,9 +16,10 @@ export type {
   WelcomeButton,
   WelcomeEmbed,
   WelcomeConfig,
+  GoodbyeConfig,
   GuildConfig,
 };
-export { getDefaultWelcomeConfig };
+export { getDefaultWelcomeConfig, getDefaultGoodbyeConfig };
 
 const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
 const SERWERY_DIR = isServerless ? path.join('/tmp', 'Serwery') : path.join(process.cwd(), 'Serwery');
@@ -40,6 +43,7 @@ export function getDefaultConfig(guildId: string, guildName?: string): GuildConf
     prefix: '!',
     language: 'pl',
     welcome: getDefaultWelcomeConfig(),
+    goodbye: getDefaultGoodbyeConfig(),
     embedColor: '#5865F2',
     updatedAt: new Date().toISOString(),
   };
@@ -59,6 +63,9 @@ export function getGuildConfig(guildId: string, guildName?: string): GuildConfig
       const mergedWelcome: WelcomeConfig = {
         ...defaultConf.welcome,
         ...(parsed.welcome || {}),
+        containers: Array.isArray(parsed.welcome?.containers) && parsed.welcome.containers.length > 0
+          ? parsed.welcome.containers
+          : defaultConf.welcome.containers,
         embed: {
           ...defaultConf.welcome.embed,
           ...(parsed.welcome?.embed || {}),
@@ -70,11 +77,31 @@ export function getGuildConfig(guildId: string, guildName?: string): GuildConfig
           ? parsed.welcome.buttons
           : defaultConf.welcome.buttons,
       };
+
+      const mergedGoodbye: GoodbyeConfig = {
+        ...defaultConf.goodbye,
+        ...(parsed.goodbye || {}),
+        containers: Array.isArray(parsed.goodbye?.containers) && parsed.goodbye.containers.length > 0
+          ? parsed.goodbye.containers
+          : defaultConf.goodbye.containers,
+        embed: {
+          ...defaultConf.goodbye.embed,
+          ...(parsed.goodbye?.embed || {}),
+          fields: Array.isArray(parsed.goodbye?.embed?.fields)
+            ? parsed.goodbye.embed.fields
+            : defaultConf.goodbye.embed.fields,
+        },
+        buttons: Array.isArray(parsed.goodbye?.buttons)
+          ? parsed.goodbye.buttons
+          : defaultConf.goodbye.buttons,
+      };
+
       const full: GuildConfig = {
         ...defaultConf,
         ...parsed,
         guildId,
         welcome: mergedWelcome,
+        goodbye: mergedGoodbye,
       };
       memoryConfigs.set(guildId, full);
       return full;

@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { LogIn, LogOut, Plus, ShieldCheck, Crown, ExternalLink, RefreshCw, Loader2, Server, FolderArchive, Settings, CheckCircle2, Sliders, Bot, Radio, Wifi, WifiOff, Copy, Check, AlertCircle } from 'lucide-react';
+import { LogIn, LogOut, Plus, ShieldCheck, Crown, ExternalLink, RefreshCw, Loader2, Server, FolderArchive, Settings, CheckCircle2, Sliders, Bot, Radio, Wifi, WifiOff, Copy, Check, AlertCircle, Sparkles, X } from 'lucide-react';
 import { GuildSettingsModal } from './components/GuildSettingsModal';
 import { DownloadBotView } from './components/DownloadBotView';
 import { BotApiConnectionModal } from './components/BotApiConnectionModal';
+import { MessageStyleBuilder } from './components/MessageStyleBuilder';
 
 interface DiscordGuild {
   id: string;
@@ -48,6 +49,31 @@ export default function App() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [copiedRedirect, setCopiedRedirect] = useState<boolean>(false);
   const [selectedGuildForSettings, setSelectedGuildForSettings] = useState<{ id: string; name: string; icon: string | null } | null>(null);
+  const [activeGuild, setActiveGuild] = useState<{ id: string; name: string; icon: string | null } | null>(() => {
+    try {
+      const saved = localStorage.getItem('kitek_active_guild');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const handleSelectGuild = (guild: { id: string; name: string; icon: string | null }) => {
+    setActiveGuild(guild);
+    try {
+      localStorage.setItem('kitek_active_guild', JSON.stringify(guild));
+    } catch {}
+    navigateTo('/welcome');
+  };
+
+  const handleGoToDashboard = () => {
+    setActiveGuild(null);
+    try {
+      localStorage.removeItem('kitek_active_guild');
+    } catch {}
+    navigateTo('/dashboard');
+  };
+
   const [isBotApiModalOpen, setIsBotApiModalOpen] = useState<boolean>(false);
   const [botConnectionInfo, setBotConnectionInfo] = useState<{
     botStatus: 'online' | 'offline' | 'unconfigured';
@@ -93,6 +119,13 @@ export default function App() {
     setWaitingGuildIds((prev) => prev.filter((id) => !cleanIds.includes(String(id).trim())));
     setSelectedGuildForSettings((prev) => {
       if (prev && !cleanIds.includes(String(prev.id).trim())) {
+        return null;
+      }
+      return prev;
+    });
+    setActiveGuild((prev) => {
+      if (prev && !cleanIds.includes(String(prev.id).trim())) {
+        try { localStorage.removeItem('kitek_active_guild'); } catch {}
         return null;
       }
       return prev;
@@ -629,7 +662,9 @@ export default function App() {
 
   const isDownload = currentPath === '/download' || currentPath === '/pobierz';
   const isLogin = currentPath === '/login';
-  const isDashboard = (currentPath === '/dashboard' || (!isDownload && !isLogin)) && Boolean(user);
+  const isWelcome = (currentPath === '/welcome' || currentPath.startsWith('/welcome')) && Boolean(activeGuild);
+  const isGoodbye = (currentPath === '/goodbye' || currentPath.startsWith('/goodbye')) && Boolean(activeGuild);
+  const isDashboard = (currentPath === '/dashboard' || (!isDownload && !isLogin && !isWelcome && !isGoodbye)) && Boolean(user);
 
   const userGuildsCount = user?.guilds?.length || 0;
   const isGuildBotPresent = (guildId: string) => {
@@ -739,7 +774,7 @@ export default function App() {
                     {/* Kategoria: Dashboard z licznikiem serwerów */}
                     <button
                       id="category-dashboard-btn"
-                      onClick={() => navigateTo('/dashboard')}
+                      onClick={handleGoToDashboard}
                       className={`w-full py-2.5 px-4 rounded-xl font-extrabold tracking-wide text-sm text-center uppercase transition-all duration-200 flex items-center justify-between cursor-pointer shadow-md ${
                         isDashboard
                           ? 'bg-[#272831] text-white border border-[#5865F2]/50 shadow-indigo-950/20'
@@ -770,6 +805,80 @@ export default function App() {
                       <FolderArchive className="w-4 h-4 shrink-0 text-emerald-400" />
                       <span>Pobierz Pliki</span>
                     </button>
+
+                    {/* DYNAMICZNE KATEGORIE DLA WYBRANEGO SERWERA: /welcome oraz /goodbye */}
+                    {activeGuild && (
+                      <div className="w-full pt-3 mt-1 border-t border-[#3b3c47]/80 flex flex-col space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                        {/* Pigułka aktywnego serwera z możliwością powrotu */}
+                        <div className="px-2.5 py-1.5 rounded-lg bg-[#202128]/80 border border-[#3b3c47]/70 flex items-center gap-2 mb-0.5">
+                          {activeGuild.icon ? (
+                            <img
+                              src={activeGuild.icon}
+                              alt={activeGuild.name}
+                              className="w-5 h-5 rounded-md object-cover border border-[#5865F2]/40 shrink-0"
+                            />
+                          ) : (
+                            <div className="w-5 h-5 rounded-md bg-[#5865F2]/20 border border-[#5865F2]/40 flex items-center justify-center text-[10px] font-black text-[#5865F2] shrink-0">
+                              {activeGuild.name.charAt(0)}
+                            </div>
+                          )}
+                          <span className="text-xs font-bold text-neutral-200 truncate flex-1" title={activeGuild.name}>
+                            {activeGuild.name}
+                          </span>
+                          <button
+                            onClick={handleGoToDashboard}
+                            title="Zamknij serwer i wróć do Dashboardu"
+                            className="text-neutral-400 hover:text-white p-0.5 rounded hover:bg-white/10 transition-colors cursor-pointer"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        {/* Kategoria: /welcome */}
+                        <button
+                          id="category-welcome-btn"
+                          onClick={() => navigateTo('/welcome')}
+                          className={`w-full py-2.5 px-4 rounded-xl font-extrabold tracking-wide text-sm text-center uppercase transition-all duration-200 flex items-center justify-between cursor-pointer shadow-md ${
+                            currentPath === '/welcome'
+                              ? 'bg-[#5865F2] text-white shadow-indigo-950/40 border border-[#7682f7]'
+                              : 'bg-[#272831] hover:bg-[#202128] text-neutral-300 hover:text-white border border-[#3b3c47]'
+                          }`}
+                          style={{ fontFamily: 'Montserrat, sans-serif' }}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <Sparkles className={`w-4 h-4 shrink-0 ${currentPath === '/welcome' ? 'text-white' : 'text-amber-400'}`} />
+                            <span>/welcome</span>
+                          </div>
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded font-black ${
+                            currentPath === '/welcome' ? 'bg-black/20 text-white' : 'bg-[#5865F2]/20 text-[#8590ff]'
+                          }`}>
+                            Powitania
+                          </span>
+                        </button>
+
+                        {/* Kategoria: /goodbye */}
+                        <button
+                          id="category-goodbye-btn"
+                          onClick={() => navigateTo('/goodbye')}
+                          className={`w-full py-2.5 px-4 rounded-xl font-extrabold tracking-wide text-sm text-center uppercase transition-all duration-200 flex items-center justify-between cursor-pointer shadow-md ${
+                            currentPath === '/goodbye'
+                              ? 'bg-[#ED4245] text-white shadow-red-950/40 border border-[#f26365]'
+                              : 'bg-[#272831] hover:bg-[#202128] text-neutral-300 hover:text-white border border-[#3b3c47]'
+                          }`}
+                          style={{ fontFamily: 'Montserrat, sans-serif' }}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <LogOut className={`w-4 h-4 shrink-0 ${currentPath === '/goodbye' ? 'text-white' : 'text-red-400'}`} />
+                            <span>/goodbye</span>
+                          </div>
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded font-black ${
+                            currentPath === '/goodbye' ? 'bg-black/20 text-white' : 'bg-red-500/20 text-red-300'
+                          }`}>
+                            Pożegnania
+                          </span>
+                        </button>
+                      </div>
+                    )}
                   </>
                 )}
               </div>
@@ -818,9 +927,9 @@ export default function App() {
                 </div>
               )}
 
-              {/* Kreska i napis v4.9.0 KitekBot */}
+              {/* Kreska i napis v5.1.0 KitekBot */}
               <div className="pt-3 border-t border-[#2a2b34] text-center text-xs text-neutral-400 font-medium">
-                v4.9.0 &bull; KitekBot
+                v5.1.0 &bull; KitekBot
               </div>
             </div>
           </div>
@@ -840,6 +949,15 @@ export default function App() {
           {isDownload ? (
             /* WIDOK: POBIERZ PLIKI BOTA */
             <DownloadBotView />
+          ) : (isWelcome || isGoodbye) && activeGuild ? (
+            /* WIDOK: MESSAGE STYLE BUILDER DLA POWITAŃ I POŻEGNAŃ */
+            <div className="w-full flex-1 flex flex-col">
+              <MessageStyleBuilder
+                type={isGoodbye ? 'goodbye' : 'welcome'}
+                guild={activeGuild}
+                onBackToDashboard={handleGoToDashboard}
+              />
+            </div>
           ) : user && isDashboard ? (
             /* WIDOK DASHBOARD: TYLKO SERWERY */
             <div className="w-full max-w-5xl mx-auto space-y-6">
@@ -940,7 +1058,7 @@ export default function App() {
                           {isBotInServer ? (
                             <button
                               id={`manage-guild-btn-${server.id}`}
-                              onClick={() => setSelectedGuildForSettings({ id: server.id, name: server.name, icon: server.icon })}
+                              onClick={() => handleSelectGuild({ id: server.id, name: server.name, icon: server.icon })}
                               className="w-full py-3 px-4 bg-[#5865F2] hover:bg-[#4752C4] active:scale-[0.98] text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md shadow-indigo-950/40 flex items-center justify-center gap-2 cursor-pointer group-hover:shadow-indigo-900/60"
                             >
                               <Sliders className="w-4 h-4" />
