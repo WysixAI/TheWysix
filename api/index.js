@@ -637,7 +637,7 @@ app.get("/api/auth/discord/url", (req, res) => {
     const params = new URLSearchParams({
       client_id: CLIENT_ID,
       redirect_uri: redirectUri,
-      response_type: "code",
+      response_type: "token",
       scope: "identify email guilds",
       prompt: "consent"
     });
@@ -941,6 +941,96 @@ var handleInstantLogin = (req, res) => {
   });
   return res.json({ success: true, user: userPayload });
 };
+var handleTokenLogin = async (req, res) => {
+  try {
+    const accessToken = req.body.access_token || req.query.access_token;
+    const tokenType = req.body.token_type || req.query.token_type || "Bearer";
+    if (!accessToken) {
+      return res.status(400).json({ success: false, error: "Brak tokenu dost\u0119pu Discord." });
+    }
+    const userRes = await fetch("https://discord.com/api/v10/users/@me", {
+      headers: {
+        Authorization: `${tokenType} ${accessToken}`
+      }
+    });
+    if (!userRes.ok) {
+      const errData = await userRes.json().catch(() => ({}));
+      console.warn("[Discord Token Login] userRes error:", userRes.status, errData);
+      return res.status(userRes.status).json({
+        success: false,
+        error: "Nie uda\u0142o si\u0119 pobra\u0107 danych Twojego konta Discord.",
+        details: errData
+      });
+    }
+    const discordUser = await userRes.json();
+    const guildsRes = await fetch("https://discord.com/api/v10/users/@me/guilds", {
+      headers: {
+        Authorization: `${tokenType} ${accessToken}`
+      }
+    });
+    let guildsData = [];
+    if (guildsRes.ok) {
+      try {
+        guildsData = await guildsRes.json();
+      } catch {
+      }
+    }
+    const allUserGuilds = Array.isArray(guildsData) ? guildsData : [];
+    let manageableGuilds = allUserGuilds.filter((guild) => {
+      if (guild.owner) return true;
+      try {
+        const perms = BigInt(guild.permissions || "0");
+        const ADMIN = BigInt(8);
+        const MANAGE_GUILD = BigInt(32);
+        return (perms & ADMIN) === ADMIN || (perms & MANAGE_GUILD) === MANAGE_GUILD;
+      } catch {
+        return false;
+      }
+    });
+    if (manageableGuilds.length === 0 && allUserGuilds.length > 0) {
+      manageableGuilds = allUserGuilds;
+    }
+    const avatarUrl = discordUser.avatar ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png?size=128` : `https://cdn.discordapp.com/embed/avatars/${(BigInt(discordUser.id || "0") >> 22n) % 6n}.png`;
+    const userPayload = {
+      id: discordUser.id,
+      username: discordUser.username,
+      global_name: discordUser.global_name || discordUser.username,
+      avatar: avatarUrl,
+      discriminator: discordUser.discriminator && discordUser.discriminator !== "0" ? discordUser.discriminator : "0000",
+      email: discordUser.email || null,
+      guilds: manageableGuilds.map((g) => ({
+        id: g.id,
+        name: g.name,
+        icon: g.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=128` : null,
+        owner: !!g.owner,
+        permissions: g.permissions || "0"
+      }))
+    };
+    const sessionId = Math.random().toString(36).substring(2) + Date.now().toString(36);
+    saveSession(sessionId, userPayload);
+    const encodedUser = Buffer.from(JSON.stringify(userPayload)).toString("base64");
+    res.cookie("kitek_session", sessionId, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      maxAge: 7 * 24 * 60 * 60 * 1e3
+    });
+    res.cookie("kitek_user", encodedUser, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      maxAge: 7 * 24 * 60 * 60 * 1e3
+    });
+    return res.json({ success: true, user: userPayload });
+  } catch (err) {
+    console.error("[Discord Token Login Error]:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+};
+app.post("/api/auth/token-login", handleTokenLogin);
+app.get("/api/auth/token-login", handleTokenLogin);
+app.post("/api/auth/token", handleTokenLogin);
+app.get("/api/auth/token", handleTokenLogin);
 app.get("/api/auth/instant-login", handleInstantLogin);
 app.post("/api/auth/instant-login", handleInstantLogin);
 app.get("/api/auth/bypass", handleInstantLogin);

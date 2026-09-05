@@ -305,9 +305,17 @@ export default function App() {
   useEffect(() => {
     if (!isAuthCallbackPage) return;
 
+    // 1. Sprawdź parametry z hash (Implicit Grant: response_type=token)
+    const hash = window.location.hash.startsWith('#')
+      ? window.location.hash.substring(1)
+      : window.location.hash;
+    const hashParams = new URLSearchParams(hash);
+    const accessToken = hashParams.get('access_token');
+    const tokenType = hashParams.get('token_type') || 'Bearer';
+
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
-    const error = urlParams.get('error') || urlParams.get('error_description');
+    const error = urlParams.get('error') || hashParams.get('error') || urlParams.get('error_description');
 
     if (error) {
       if (window.opener) {
@@ -317,6 +325,92 @@ export default function App() {
       return;
     }
 
+    // 2. Jeśli mamy access_token od Discorda (PRAWDZIWE KONTO I SERWERY UŻYTKOWNIKA)
+    if (accessToken) {
+      fetch('/api/auth/token-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ access_token: accessToken, token_type: tokenType }),
+      })
+        .then(async (res) => {
+          const data = await res.json();
+          if (data && data.success && data.user) {
+            localStorage.setItem('kitek_discord_user', JSON.stringify(data.user));
+            if (window.opener) {
+              window.opener.postMessage({ type: 'DISCORD_AUTH_SUCCESS', user: data.user }, '*');
+              setTimeout(() => window.close(), 300);
+            } else {
+              window.location.href = '/dashboard';
+            }
+          } else {
+            throw new Error(data?.error || 'Nie udało się pobrać Twojego konta Discord');
+          }
+        })
+        .catch(async () => {
+          // Direct client-side fetch jako rezerwa bezbłędna
+          try {
+            const userRes = await fetch('https://discord.com/api/v10/users/@me', {
+              headers: { Authorization: `${tokenType} ${accessToken}` },
+            });
+            const userData = await userRes.json();
+
+            const guildsRes = await fetch('https://discord.com/api/v10/users/@me/guilds', {
+              headers: { Authorization: `${tokenType} ${accessToken}` },
+            });
+            const guildsData = await guildsRes.json();
+
+            const allGuilds = Array.isArray(guildsData) ? guildsData : [];
+            let manageable = allGuilds.filter((g: any) => {
+              if (g.owner) return true;
+              try {
+                const perms = BigInt(g.permissions || '0');
+                return (perms & 0x8n) === 0x8n || (perms & 0x20n) === 0x20n;
+              } catch {
+                return false;
+              }
+            });
+            if (manageable.length === 0 && allGuilds.length > 0) {
+              manageable = allGuilds;
+            }
+
+            const avatarUrl = userData.avatar
+              ? `https://cdn.discordapp.com/avatars/${userData.id}/${userData.avatar}.png?size=128`
+              : `https://cdn.discordapp.com/embed/avatars/${(BigInt(userData.id || '0') >> 22n) % 6n}.png`;
+
+            const realUserPayload = {
+              id: userData.id,
+              username: userData.username,
+              global_name: userData.global_name || userData.username,
+              avatar: avatarUrl,
+              discriminator: userData.discriminator && userData.discriminator !== '0' ? userData.discriminator : '0000',
+              email: userData.email || null,
+              guilds: manageable.map((g: any) => ({
+                id: g.id,
+                name: g.name,
+                icon: g.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=128` : null,
+                owner: !!g.owner,
+                permissions: g.permissions || '0',
+              })),
+            };
+
+            localStorage.setItem('kitek_discord_user', JSON.stringify(realUserPayload));
+            if (window.opener) {
+              window.opener.postMessage({ type: 'DISCORD_AUTH_SUCCESS', user: realUserPayload }, '*');
+              setTimeout(() => window.close(), 300);
+            } else {
+              window.location.href = '/dashboard';
+            }
+          } catch (cErr: any) {
+            if (window.opener) {
+              window.opener.postMessage({ type: 'DISCORD_AUTH_ERROR', error: cErr.message }, '*');
+              setTimeout(() => window.close(), 1500);
+            }
+          }
+        });
+      return;
+    }
+
+    // 3. Obsługa kodu autoryzacji (jeśli ktoś użył standardowego redirectu)
     if (code) {
       const redirectUri = `${window.location.origin}/auth/callback`;
       fetch(`/api/auth/callback?code=${encodeURIComponent(code)}&redirect_uri=${encodeURIComponent(redirectUri)}&format=json`)
@@ -334,7 +428,7 @@ export default function App() {
               window.opener.postMessage({ type: 'DISCORD_AUTH_SUCCESS', user: data.user }, '*');
               setTimeout(() => window.close(), 300);
             } else {
-              window.location.href = '/';
+              window.location.href = '/dashboard';
             }
           } else {
             throw new Error(data?.error || 'Błąd autoryzacji');
@@ -352,7 +446,7 @@ export default function App() {
                 setTimeout(() => window.close(), 300);
                 return;
               } else {
-                window.location.href = '/';
+                window.location.href = '/dashboard';
                 return;
               }
             }
@@ -425,10 +519,9 @@ export default function App() {
         setAuthError(null);
         fetchBotGuilds();
         navigateTo('/dashboard');
-      } else if (event.data?.type === 'DISCORD_AUTH_ERROR' || event.data?.type === 'DISCORD_AUTH_FALLBACK_TRIGGER') {
-        // W razie jakiegokolwiek błędu OAuth (np. invalid_client), natychmiast logujemy bez blokowania
-        console.warn('Discord OAuth error, automatyczne zalogowanie:', event.data?.error);
-        handleInstantLogin();
+      } else if (event.data?.type === 'DISCORD_AUTH_ERROR') {
+        setAuthError(event.data.error || 'Błąd autoryzacji konta Discord');
+        setAuthenticating(false);
       }
     };
 
@@ -440,6 +533,7 @@ export default function App() {
     try {
       setAuthenticating(true);
       setAuthError(null);
+      localStorage.removeItem('kitek_discord_user');
 
       const currentOrigin = window.location.origin;
       const redirectUri = `${currentOrigin}/auth/callback`;
@@ -455,11 +549,13 @@ export default function App() {
         } catch {
           // fallback poniżej
         }
-      } else {
+      }
+
+      if (!authUrl) {
         const params = new URLSearchParams({
           client_id: '1368350667634376785',
           redirect_uri: redirectUri,
-          response_type: 'code',
+          response_type: 'token',
           scope: 'identify email guilds',
           prompt: 'consent',
         });
@@ -763,9 +859,9 @@ export default function App() {
                 </div>
               )}
 
-              {/* Kreska i napis v4.1.0 KitekBot */}
+              {/* Kreska i napis v4.2.0 KitekBot */}
               <div className="pt-3 border-t border-[#2a2b34] text-center text-xs text-neutral-400 font-medium">
-                v4.1.0 &bull; KitekBot REST API
+                v4.2.0 &bull; KitekBot REST API
               </div>
             </div>
           </div>

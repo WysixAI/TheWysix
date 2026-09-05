@@ -11,8 +11,8 @@ export function generateBotZip(
   // 1. package.json
   const packageJson = {
     name: "kitek-bot",
-    version: "4.1.0",
-    description: "KitekBot Discord Bot v4.1.0 — z automatycznym fallbackiem autoryzacji i omijaniem błędu invalid_client",
+    version: "4.2.0",
+    description: "KitekBot Discord Bot v4.2.0 — pełna autoryzacja z indywidualnym kontem Discord i serwerami użytkownika",
     main: "index.js",
     scripts: {
       prestart: "npm install --no-audit --prefer-offline",
@@ -28,7 +28,7 @@ export function generateBotZip(
     devDependencies: {
       "nodemon": "^3.1.7"
     },
-    keywords: ["discord", "bot", "kitekbot", "dashboard", "rest-api", "v4.1.0"],
+    keywords: ["discord", "bot", "kitekbot", "dashboard", "rest-api", "v4.2.0"],
     author: "KitekBot Team",
     license: "ISC"
   };

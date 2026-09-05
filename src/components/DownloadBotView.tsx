@@ -12,10 +12,22 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
+    version: "v4.2.0",
+    date: "Dzisiaj, 05.09.2026",
+    badge: "NAJNOWSZA (v4.2.0)",
+    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Przełączono autoryzację Discord na Implicit Grant (response_type=token) — 100% autentyczne logowanie bez wymogu Client Secret",
+      "Każdy użytkownik loguje się teraz na swoje WŁASNE konto Discord (indywidualny nick, awatar i discriminator)",
+      "Pobieranie i wyświetlanie w Dashboardzie rzeczywistych serwerów zalogowanego użytkownika z Discord API",
+      "Dodano dedykowany endpoint /api/auth/token-login oraz automatyczne pobieranie uprawnień do zarządzania serwerami"
+    ]
+  },
+  {
     version: "v4.1.0",
     date: "Dzisiaj, 05.09.2026",
-    badge: "NAJNOWSZA (v4.1.0)",
-    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    badge: "STABILNA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Rozwiązano błąd invalid_client — dodano automatyczny fallback autoryzacji do profilu Właściciela",
       "Dodano natychmiastowe logowanie jednym kliknięciem (Bypass OAuth / Admin) na ekranie logowania",
