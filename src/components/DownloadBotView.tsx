@@ -12,10 +12,21 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
+    version: "v4.9.0",
+    date: "Dzisiaj, 05.09.2026",
+    badge: "NAJNOWSZA (v4.9.0)",
+    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Uproszczono kartę logowania — usunięto alternatywne formularze logowania nickiem/ID oraz sekcję ostrzeżenia o nieprawidłowych parametrach URL",
+      "Karta logowania zawiera teraz wyłącznie jeden, czytelny przycisk 'Zaloguj się przez Discord'",
+      "Maksymalne oczyszczenie i zachowanie minimalistycznego wyglądu ekranu startowego"
+    ]
+  },
+  {
     version: "v4.8.0",
     date: "Dzisiaj, 05.09.2026",
-    badge: "NAJNOWSZA (v4.8.0)",
-    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    badge: "POPRZEDNIA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Zablokowano lewy pasek boczny (fixed/sticky) — panel boczny pozostaje w stałym miejscu i nie przesuwa się podczas przewijania zawartości strony oraz listy wersji bota",
       "Usunięto kategorię Powitania i Pożegnania zgodnie z dyspozycją użytkownika",

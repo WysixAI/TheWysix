@@ -818,9 +818,9 @@ export default function App() {
                 </div>
               )}
 
-              {/* Kreska i napis v4.8.0 KitekBot */}
+              {/* Kreska i napis v4.9.0 KitekBot */}
               <div className="pt-3 border-t border-[#2a2b34] text-center text-xs text-neutral-400 font-medium">
-                v4.8.0 &bull; KitekBot
+                v4.9.0 &bull; KitekBot
               </div>
             </div>
           </div>
@@ -1024,100 +1024,10 @@ export default function App() {
                   ) : (
                     <>
                       <DiscordIcon className="w-6 h-6 shrink-0" />
-                      <span>Zaloguj przez Discord</span>
+                      <span>Zaloguj się przez Discord</span>
                     </>
                   )}
                 </button>
-
-                {/* Opcja bezpośredniego wejścia swoim kontem Discord */}
-                <div className="relative my-5 flex items-center justify-center">
-                  <div className="w-full border-t border-[#3b3c47]" />
-                  <span className="absolute bg-[#32333d] px-3 text-[10px] font-black uppercase tracking-wider text-neutral-400">
-                    LUB ZALOGUJ SWOIM NICKIEM Z DISCORDA
-                  </span>
-                </div>
-
-                <div className="space-y-2 text-left">
-                  <label htmlFor="custom-discord-name-input" className="block text-xs font-bold text-neutral-300">
-                    Twój nick lub ID Discord:
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      id="custom-discord-name-input"
-                      type="text"
-                      value={customUsername}
-                      onChange={(e) => setCustomUsername(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleCustomNameLogin();
-                      }}
-                      placeholder="Wpisz swój nick (np. pdalota56)"
-                      className="flex-1 px-3.5 py-2.5 bg-[#252630] border border-[#3b3c47] focus:border-[#5865F2] rounded-xl text-xs text-white placeholder-neutral-500 outline-none transition-all font-medium"
-                    />
-                    <button
-                      id="custom-login-submit-btn"
-                      onClick={() => handleCustomNameLogin()}
-                      disabled={authenticating}
-                      className="px-4 py-2.5 bg-[#5865F2] hover:bg-[#4752C4] active:scale-95 text-white font-black text-xs uppercase tracking-wide rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shrink-0 shadow-md disabled:opacity-50"
-                    >
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>Zaloguj</span>
-                    </button>
-                  </div>
-                  <p className="text-[11px] text-neutral-400 leading-normal">
-                    Loguje dokładnie na <strong>Twoje własne konto</strong> i umożliwia zarządzanie serwerami bota bez konfliktów sesji Discord.
-                  </p>
-                </div>
-
-                {/* Sekcja pomocnicza: Konfiguracja Redirect URI w Discord Developer Portal */}
-                <div className="mt-6 pt-5 border-t border-[#3f404a] text-left">
-                  <div className="flex items-center gap-2 text-amber-300 text-xs font-bold mb-1.5">
-                    <AlertCircle className="w-4 h-4 shrink-0 text-amber-400" />
-                    <span>Błąd &quot;Nieprawidłowe parametry adresu URL&quot;?</span>
-                  </div>
-                  <p className="text-[11px] text-neutral-300 mb-2.5 leading-relaxed">
-                    Discord wymaga wpisania dokładnego adresu Redirect URI w <strong>Discord Developer Portal &rarr; Applications &rarr; OAuth2 &rarr; Redirects</strong>:
-                  </p>
-
-                  <div className="bg-[#24252f] p-2.5 rounded-xl border border-[#3b3c47] flex items-center justify-between gap-2 shadow-inner">
-                    <code className="text-[11px] text-indigo-300 font-mono truncate select-all font-semibold">
-                      {typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : 'https://kitekbot.vercel.app/auth/callback'}
-                    </code>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const uri = typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : 'https://kitekbot.vercel.app/auth/callback';
-                        navigator.clipboard.writeText(uri);
-                        setCopiedRedirect(true);
-                        setTimeout(() => setCopiedRedirect(false), 2000);
-                      }}
-                      className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-[#5865F2] hover:bg-[#4752C4] active:scale-95 text-white flex items-center gap-1 shrink-0 cursor-pointer transition-all"
-                    >
-                      {copiedRedirect ? (
-                        <>
-                          <Check className="w-3.5 h-3.5 text-emerald-300" />
-                          <span className="text-emerald-300">Skopiowano!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3.5 h-3.5" />
-                          <span>Kopiuj</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-
-                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-                    <a
-                      href="https://discord.com/developers/applications/1368350667634376785/oauth2"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-[11px] text-indigo-400 hover:text-indigo-300 font-bold hover:underline"
-                    >
-                      <ExternalLink className="w-3 h-3" />
-                      <span>Otwórz Discord Developer Portal (OAuth2)</span>
-                    </a>
-                  </div>
-                </div>
               </div>
             </div>
           )}
