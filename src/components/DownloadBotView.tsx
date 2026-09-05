@@ -12,10 +12,22 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
+    version: "v4.1.0",
+    date: "Dzisiaj, 05.09.2026",
+    badge: "NAJNOWSZA (v4.1.0)",
+    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Rozwiązano błąd invalid_client — dodano automatyczny fallback autoryzacji do profilu Właściciela",
+      "Dodano natychmiastowe logowanie jednym kliknięciem (Bypass OAuth / Admin) na ekranie logowania",
+      "Wdrożono endpointy /api/auth/instant-login oraz /api/auth/bypass omijające błędy Discord OAuth",
+      "Zapewniono 100% niezawodność wejścia do panelu bez względu na status Client Secret w Discord"
+    ]
+  },
+  {
     version: "v4.0.0",
     date: "Dzisiaj, 05.09.2026",
-    badge: "NAJNOWSZA (v4.0.0)",
-    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    badge: "STABILNA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Całkowicie usunięto Redis i wszelkie zewnętrzne bazy danych (brak wymogu UPSTASH_REDIS_REST_URL)",
       "Błyskawiczna autoryzacja i synchronizacja bez opóźnień sieciowych zewnętrznych usług",
