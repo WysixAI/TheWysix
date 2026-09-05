@@ -932,7 +932,7 @@ app.get("/api", (req, res, next) => {
 });
 var serverApp_default = app;
 
-// api/auth/callback.ts
+// src/authCallbackEntry.ts
 function handler(req, res) {
   return serverApp_default(req, res);
 }
