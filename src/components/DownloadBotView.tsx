@@ -12,10 +12,22 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
+    version: "v3.0.0",
+    date: "Dzisiaj, 05.09.2026",
+    badge: "NAJNOWSZA (v3.0.0)",
+    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Naprawiono błąd 'Unexpected token <, <!doctype ... is not valid JSON' poprzez wykluczenie ścieżek /api/ z reguły SPA fallback w vercel.json",
+      "Dodano bezpieczne parsowanie odpowiedzi fetch() we wszystkich komponentach (ochrona przed awarią przy odpowiedziach HTML/proxy)",
+      "Wdrożono automatyczną normalizację prefiksu /api/ w middleware Express dla bezserwerowych wywołań Vercel Serverless",
+      "Zapewniono wymuszone zwracanie formatu JSON przy błędach autoryzacji OAuth (parametr format=json i nagłówek Accept)"
+    ]
+  },
+  {
     version: "v2.9.0",
     date: "Dzisiaj, 05.09.2026",
-    badge: "NAJNOWSZA (v2.9.0)",
-    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    badge: "STABILNA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Wdrożono natywny bezserwerowy eksport Express dla środowiska Vercel (eliminacja przedwczesnego zamykania wywołań asynchronicznych)",
       "Utworzono dedykowane punkty wejścia Serverless: /api/auth/callback.ts, /api/[...slug].ts oraz /api/index.ts",

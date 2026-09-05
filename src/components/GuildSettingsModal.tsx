@@ -33,16 +33,22 @@ export function GuildSettingsModal({ guild, onClose }: GuildSettingsModalProps) 
         fetch(`/api/bot/proxy/guilds/${guild.id}/roles`)
       ]);
       if (chRes.ok) {
-        const chData = await chRes.json();
-        if (chData.success && Array.isArray(chData.channels)) {
-          setBotChannels(chData.channels);
-        }
+        try {
+          const text = await chRes.text();
+          const chData = JSON.parse(text);
+          if (chData.success && Array.isArray(chData.channels)) {
+            setBotChannels(chData.channels);
+          }
+        } catch {}
       }
       if (roRes.ok) {
-        const roData = await roRes.json();
-        if (roData.success && Array.isArray(roData.roles)) {
-          setBotRoles(roData.roles);
-        }
+        try {
+          const text = await roRes.text();
+          const roData = JSON.parse(text);
+          if (roData.success && Array.isArray(roData.roles)) {
+            setBotRoles(roData.roles);
+          }
+        } catch {}
       }
     } catch {
       // ignore
@@ -54,11 +60,17 @@ export function GuildSettingsModal({ guild, onClose }: GuildSettingsModalProps) 
       setLoading(true);
       setError(null);
       const res = await fetch(`/api/guilds/${guild.id}?name=${encodeURIComponent(guild.name)}`);
-      const data = await res.json();
-      if (data.success && data.config) {
+      const text = await res.text();
+      let data: any = null;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error('Serwer zwrócił nieobsługiwany format');
+      }
+      if (data && data.success && data.config) {
         setConfig(data.config);
       } else {
-        setError(data.error || 'Nie udało się pobrać konfiguracji');
+        setError(data?.error || 'Nie udało się pobrać konfiguracji');
       }
     } catch (err: any) {
       setError(err.message || 'Błąd połączenia z API bota');
@@ -80,12 +92,18 @@ export function GuildSettingsModal({ guild, onClose }: GuildSettingsModalProps) 
         body: JSON.stringify(config),
       });
 
-      const data = await res.json();
-      if (data.success) {
+      const text = await res.text();
+      let data: any = null;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error('Nieprawidłowa odpowiedź serwera');
+      }
+      if (data && data.success) {
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 3000);
       } else {
-        setError(data.error || 'Nie udało się zapisać zmian');
+        setError(data?.error || 'Nie udało się zapisać zmian');
       }
     } catch (err: any) {
       setError(err.message || 'Błąd wysyłania konfiguracji');

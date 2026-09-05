@@ -35,11 +35,14 @@ export function BotApiConnectionModal({ isOpen, onClose, onConnected }: BotApiCo
       setLoading(true);
       const res = await fetch(`/api/bot/connection?t=${Date.now()}`);
       if (res.ok) {
-        const data = await res.json();
-        setConnectionData(data);
-        if (data.botApiUrl && !apiUrl) {
-          setApiUrl(data.botApiUrl);
-        }
+        const text = await res.text();
+        try {
+          const data = JSON.parse(text);
+          setConnectionData(data);
+          if (data.botApiUrl && !apiUrl) {
+            setApiUrl(data.botApiUrl);
+          }
+        } catch {}
       }
     } catch {
       // ignore
@@ -72,9 +75,14 @@ export function BotApiConnectionModal({ isOpen, onClose, onConnected }: BotApiCo
         })
       });
 
-      const saveData = await saveRes.json();
-      if (!saveRes.ok || !saveData.success) {
-        setStatusMessage({ type: 'error', text: saveData.error || 'Błąd zapisu danych połączenia' });
+      let saveData: any = null;
+      try {
+        const text = await saveRes.text();
+        saveData = JSON.parse(text);
+      } catch {}
+
+      if (!saveRes.ok || !saveData?.success) {
+        setStatusMessage({ type: 'error', text: saveData?.error || 'Błąd zapisu danych połączenia' });
         setTesting(false);
         return;
       }
@@ -89,8 +97,13 @@ export function BotApiConnectionModal({ isOpen, onClose, onConnected }: BotApiCo
         })
       });
 
-      const testData = await testRes.json();
-      if (testRes.ok && testData.success) {
+      let testData: any = null;
+      try {
+        const text = await testRes.text();
+        testData = JSON.parse(text);
+      } catch {}
+
+      if (testRes.ok && testData?.success) {
         setStatusMessage({
           type: 'success',
           text: `Połączono pomyślnie z botem ${testData.botTag || ''}! Ping: ${testData.ping ? testData.ping + 'ms' : 'OK'} | Serwery: ${testData.guildsCount ?? 0}`
@@ -100,7 +113,7 @@ export function BotApiConnectionModal({ isOpen, onClose, onConnected }: BotApiCo
       } else {
         setStatusMessage({
           type: 'error',
-          text: testData.error || 'Nie udało się połączyć z REST API bota. Upewnij się, że bot jest uruchomiony na serwerze i port jest otwarty.'
+          text: testData?.error || 'Nie udało się połączyć z REST API bota. Upewnij się, że bot jest uruchomiony na serwerze i port jest otwarty.'
         });
       }
     } catch (err: any) {
@@ -114,13 +127,17 @@ export function BotApiConnectionModal({ isOpen, onClose, onConnected }: BotApiCo
     try {
       setTesting(true);
       const res = await fetch('/api/bot/proxy/sync-now', { method: 'POST' });
-      const data = await res.json();
-      if (res.ok && data.success) {
+      let data: any = null;
+      try {
+        const text = await res.text();
+        data = JSON.parse(text);
+      } catch {}
+      if (res.ok && data?.success) {
         setStatusMessage({ type: 'success', text: 'Wymuszono natychmiastową synchronizację stanu bota z Discord Gateway!' });
         await fetchConnectionStatus();
         if (onConnected) onConnected();
       } else {
-        setStatusMessage({ type: 'error', text: data.error || 'Nie udało się wymusić synchronizacji' });
+        setStatusMessage({ type: 'error', text: data?.error || 'Nie udało się wymusić synchronizacji' });
       }
     } catch (err: any) {
       setStatusMessage({ type: 'error', text: err.message || 'Błąd połączenia' });

@@ -117,13 +117,18 @@ export default function App() {
       });
       clearTimeout(timeoutId);
       if (res.ok) {
-        const data = await res.json();
-        setBotConnectionInfo({
-          botStatus: data.botStatus || 'unconfigured',
-          ping: data.ping,
-          botTag: data.botTag,
-          version: data.version
-        });
+        const text = await res.text();
+        try {
+          const data = JSON.parse(text);
+          setBotConnectionInfo({
+            botStatus: data.botStatus || 'unconfigured',
+            ping: data.ping,
+            botTag: data.botTag,
+            version: data.version
+          });
+        } catch {
+          // Ignoruj nie-JSON
+        }
       }
     } catch {
       // Bezpiecznie ignorujemy chwilowy brak odpowiedzi podczas restartu kontenera
@@ -149,9 +154,15 @@ export default function App() {
       clearTimeout(timeoutId);
 
       if (res.ok) {
-        const data = await res.json();
+        const text = await res.text();
+        let data: any = null;
+        try {
+          data = JSON.parse(text);
+        } catch {
+          // Nie-JSON, zignoruj
+        }
 
-        if (Array.isArray(data.guilds)) {
+        if (data && Array.isArray(data.guilds)) {
           const normalized = data.guilds.map((id: unknown) => String(id).trim()).filter(Boolean);
           setBotGuildIds(normalized);
           setWaitingGuildIds((prev) => prev.filter((id) => !normalized.includes(String(id).trim())));
@@ -168,9 +179,11 @@ export default function App() {
           }
         }
 
-        setBotOnline(Boolean(data.online));
+        if (data && data.online !== undefined) {
+          setBotOnline(Boolean(data.online));
+        }
 
-        if (data.botTag) {
+        if (data && data.botTag) {
           setBotTag(data.botTag);
         }
       }
@@ -241,8 +254,14 @@ export default function App() {
       fetchBotGuilds();
       const res = await fetch(`/api/auth/me?t=${Date.now()}`, { cache: 'no-store' });
       if (res.ok) {
-        const data = await res.json();
-        if (data.authenticated && data.user) {
+        const text = await res.text();
+        let data: any = null;
+        try {
+          data = JSON.parse(text);
+        } catch {
+          // Serwer zwrócił treść nie będącą JSON
+        }
+        if (data && data.authenticated && data.user) {
           setUser(data.user);
           try {
             localStorage.setItem('kitek_discord_user', JSON.stringify(data.user));
@@ -301,8 +320,14 @@ export default function App() {
     if (code) {
       const redirectUri = `${window.location.origin}/auth/callback`;
       fetch(`/api/auth/callback?code=${encodeURIComponent(code)}&redirect_uri=${encodeURIComponent(redirectUri)}&format=json`)
-        .then((res) => res.json())
-        .then((data) => {
+        .then(async (res) => {
+          const text = await res.text();
+          let data: any = null;
+          try {
+            data = JSON.parse(text);
+          } catch {
+            throw new Error('Serwer zwrócił nieobsługiwany format');
+          }
           if (data && data.success && data.user) {
             localStorage.setItem('kitek_discord_user', JSON.stringify(data.user));
             if (window.opener) {
@@ -369,8 +394,13 @@ export default function App() {
       let authUrl = '';
 
       if (res.ok) {
-        const data = await res.json();
-        authUrl = data.url;
+        const text = await res.text();
+        try {
+          const data = JSON.parse(text);
+          authUrl = data.url;
+        } catch {
+          // fallback poniżej
+        }
       } else {
         const params = new URLSearchParams({
           client_id: '1368350667634376785',
@@ -679,9 +709,9 @@ export default function App() {
                 </div>
               )}
 
-              {/* Kreska i napis v2.9.0 KitekBot */}
+              {/* Kreska i napis v3.0.0 KitekBot */}
               <div className="pt-3 border-t border-[#2a2b34] text-center text-xs text-neutral-400 font-medium">
-                v2.9.0 &bull; KitekBot REST API
+                v3.0.0 &bull; KitekBot REST API
               </div>
             </div>
           </div>
