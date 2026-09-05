@@ -11,8 +11,8 @@ export function generateBotZip(
   // 1. package.json
   const packageJson = {
     name: "kitek-bot",
-    version: "5.2.0",
-    description: "KitekBot Discord Bot v5.2.0 — zaawansowany kreator powitań i pożegnań z akcjami przycisków i menu (Kick, Ban, Role, DM, Odpowiedzi)",
+    version: "5.3.0",
+    description: "KitekBot Discord Bot v5.3.0 — zaawansowany kreator powitań i pożegnań z akcjami przycisków (Kick, Ban, Role, DM, Odpowiedzi) oraz czystym edytorem komponentów",
     main: "index.js",
     scripts: {
       prestart: "npm install --no-audit --prefer-offline",
@@ -28,7 +28,7 @@ export function generateBotZip(
     devDependencies: {
       "nodemon": "^3.1.7"
     },
-    keywords: ["discord", "bot", "kitekbot", "welcome-system", "goodbye-system", "message-style", "button-actions", "v5.2.0"],
+    keywords: ["discord", "bot", "kitekbot", "welcome-system", "goodbye-system", "message-style", "button-actions", "v5.3.0"],
     author: "KitekBot Team",
     license: "ISC"
   };

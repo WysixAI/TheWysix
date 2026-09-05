@@ -12,10 +12,25 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
+    version: "v5.3.0",
+    date: "Dzisiaj, 05.09.2026",
+    badge: "NAJNOWSZA (v5.3.0)",
+    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Wdrożono konfigurowalny system akcji przycisków: Kick (Wyrzucenie), Ban (Zbanowanie z liczbą dni usunięcia wiadomości), Send Message (Wysłanie wiadomości na kanał), Ephemeral Message (Wiadomość widoczna tylko dla klikającego), Give Role (Nadanie roli), Remove Role (Odebranie roli), Send DM (Wiadomość prywatna)",
+      "Całkowicie usunięto z góry narzucone szablony (Presets) — nowy kontener Embed tworzy się teraz jako czysty, pusty szablon gotowy do dowolnej aranżacji",
+      "Dodano automatyczny placeholder i podpowiedzi w pustym kontenerze Embed zachęcające do dodania pierwszego komponentu",
+      "Wprowadzono przycisk 'Wyczyść do pustego embedu' resetujący konfigurację do pojedynczego pustego kontenera zamiast usuwania wszystkiego",
+      "Dopasowano kolorystykę i stylistykę GUI edytora do jednolitego motywu panelu KitekBot (#32333d, #2d2e36, #272831, #202128, #3b3c47, #5865F2)",
+      "Rozbudowano zestaw komponentów: Sekcje tekstu do 3 akapitów ze wsparciem Markdown, Separatory z kreską Divider, Action Row z przyciskami i menu oraz Banery Media",
+      "Zaktualizowano plik README.md dokumentujący pełną architekturę v5.3.0"
+    ]
+  },
+  {
     version: "v5.2.0",
     date: "Dzisiaj, 05.09.2026",
-    badge: "NAJNOWSZA (v5.2.0)",
-    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    badge: "POPRZEDNIA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Wdrożono zaawansowany system akcji komponentów (Component Actions): Kick, Ban, Send Message, Ephemeral Reply, Give Role, Remove Role oraz Send DM",
       "Dodano pełne wsparcie dla Action Row ze String Select Menu (Menu rozwijane z opcjami, emoji, opisami, wartościami i listą akcji) w stylu Discord message.style",

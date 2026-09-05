@@ -54,11 +54,7 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
   // Guild config state
   const [enabled, setEnabled] = useState(true);
   const [channelId, setChannelId] = useState('');
-  const [plainMessage, setPlainMessage] = useState(
-    isWelcome
-      ? '👋 Witaj {user} na serwerze **{server.name}**!'
-      : '👋 Żegnaj {user}, opuściłeś serwer **{server.name}**.'
-  );
+  const [plainMessage, setPlainMessage] = useState('');
   const [containers, setContainers] = useState<MessageContainer[]>([getDefaultContainer()]);
 
   // Channels list
@@ -92,9 +88,11 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
           if (cfg) {
             setEnabled(Boolean(cfg.enabled));
             setChannelId(cfg.channelId || '');
-            if (cfg.message) setPlainMessage(cfg.message);
+            if (cfg.message !== undefined) setPlainMessage(cfg.message);
             if (Array.isArray(cfg.containers) && cfg.containers.length > 0) {
               setContainers(cfg.containers);
+            } else {
+              setContainers([getDefaultContainer()]);
             }
           }
         }
@@ -335,7 +333,13 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
   };
 
   const removeContainer = (cIndex: number) => {
-    setContainers((prev) => prev.filter((_, i) => i !== cIndex));
+    setContainers((prev) => {
+      const next = prev.filter((_, i) => i !== cIndex);
+      if (next.length === 0) {
+        return [getDefaultContainer()];
+      }
+      return next;
+    });
   };
 
   const moveContainer = (cIndex: number, dir: -1 | 1) => {
@@ -366,7 +370,7 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
           id: newId,
           type: 'section',
           accessory: { type: 'None', url: '', description: '' },
-          texts: [{ id: `txt-${Date.now()}`, content: 'Nowa treść sekcji...' }],
+          texts: [{ id: `txt-${Date.now()}`, content: '' }],
         };
         currentList.push(sec);
       } else if (compType === 'separator') {
@@ -381,8 +385,8 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
         const media: ComponentMedia = {
           id: newId,
           type: 'media',
-          url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&auto=format&fit=crop&q=80',
-          caption: 'Baner powitalny serwera',
+          url: '',
+          caption: '',
           spoiler: false,
         };
         currentList.push(media);
@@ -512,7 +516,7 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
       if (comp && comp.type === 'section') {
         const newSec: ComponentSection = {
           ...comp,
-          texts: [...comp.texts, { id: `txt-${Date.now()}`, content: 'Kolejny akapit tekstu...' }],
+          texts: [...comp.texts, { id: `txt-${Date.now()}`, content: '' }],
         };
         target.components = [
           ...target.components.slice(0, compIdx),
@@ -587,9 +591,9 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
   };
 
   return (
-    <div className="flex-1 w-full flex flex-col bg-[#1a1b23] text-[#dbdee1] min-h-screen">
+    <div className="flex-1 w-full flex flex-col bg-[#32333d] text-[#dbdee1] font-['Montserrat',sans-serif] min-h-screen">
       {/* Top Header Bar */}
-      <div className="h-14 border-b border-[#282936] bg-[#202128] px-6 flex items-center justify-between shrink-0 shadow-md">
+      <div className="h-14 border-b border-[#25262d] bg-[#2d2e36] px-6 flex items-center justify-between shrink-0 shadow-md">
         <div className="flex items-center gap-3">
           <button
             onClick={onBackToDashboard}
@@ -657,7 +661,7 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
       )}
 
       {/* Settings Ribbon: Channel & State */}
-      <div className="bg-[#202128] border-b border-[#282936] px-6 py-3 flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-[#2d2e36] border-b border-[#25262d] px-6 py-3 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <label className="flex items-center gap-2 cursor-pointer select-none">
             <input
@@ -671,7 +675,7 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
             </span>
           </label>
 
-          <div className="h-4 w-[1px] bg-[#363748]" />
+          <div className="h-4 w-[1px] bg-[#3b3c47]" />
 
           {/* Channel Selector */}
           <div className="flex items-center gap-2">
@@ -681,7 +685,7 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
               <select
                 value={channelId}
                 onChange={(e) => setChannelId(e.target.value)}
-                className="bg-[#181920] border border-[#3b3c4f] rounded-lg px-3 py-1.5 text-xs font-mono text-white outline-none focus:border-[#5865F2]"
+                className="bg-[#202128] border border-[#3b3c47] rounded-lg px-3 py-1.5 text-xs font-mono text-white outline-none focus:border-[#5865F2]"
               >
                 <option value="">Wybierz kanał...</option>
                 {channels.map((c) => (
@@ -696,13 +700,13 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
                 value={channelId}
                 onChange={(e) => setChannelId(e.target.value)}
                 placeholder="Wklej ID kanału (np. 123456...)"
-                className="bg-[#181920] border border-[#3b3c4f] rounded-lg px-3 py-1.5 text-xs font-mono text-white outline-none focus:border-[#5865F2] w-48"
+                className="bg-[#202128] border border-[#3b3c47] rounded-lg px-3 py-1.5 text-xs font-mono text-white outline-none focus:border-[#5865F2] w-48"
               />
             )}
             <button
               onClick={fetchChannels}
               title="Odśwież kanały"
-              className="p-1.5 hover:bg-[#292a38] rounded-lg text-neutral-400 hover:text-white transition-colors cursor-pointer"
+              className="p-1.5 hover:bg-[#202128] rounded-lg text-neutral-400 hover:text-white transition-colors cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loadingChannels ? 'animate-spin' : ''}`} />
             </button>
@@ -719,7 +723,7 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
                 navigator.clipboard.writeText(v);
               }}
               title="Kliknij, aby skopiować"
-              className="px-2.5 py-1 rounded-lg bg-[#181920] hover:bg-[#282936] border border-[#343547] text-indigo-300 font-mono text-[10px] font-bold cursor-pointer transition-colors"
+              className="px-2.5 py-1 rounded-lg bg-[#202128] hover:bg-[#272831] border border-[#3b3c47] text-indigo-300 font-mono text-[10px] font-bold cursor-pointer transition-colors"
             >
               {v}
             </button>
@@ -730,13 +734,13 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
       {/* Main Workspace: Tree Builder on Left, Interactive Simulator on Right */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-0 overflow-y-auto">
         {/* LEFT COLUMN: THE COMPONENT BUILDER TREE */}
-        <div className="lg:col-span-7 p-6 border-r border-[#282936] space-y-6 overflow-y-auto bg-[#1a1b23]">
+        <div className="lg:col-span-7 p-6 border-r border-[#25262d] space-y-6 overflow-y-auto bg-[#32333d]">
           {/* Plain Message Box */}
           <div className="space-y-1.5">
             <label className="text-[11px] font-black uppercase tracking-wider text-neutral-400">
               Wiadomość tekstowa nad embedem (opcjonalnie)
             </label>
-            <div className="bg-[#202128] border border-[#313242] focus-within:border-[#5865F2] rounded-xl overflow-hidden">
+            <div className="bg-[#272831] border border-[#3b3c47] focus-within:border-[#5865F2] rounded-xl overflow-hidden">
               <input
                 type="text"
                 value={plainMessage}
@@ -883,6 +887,17 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
                             Komponenty wewnątrz ({container.components.length}/10)
                           </span>
                         </div>
+
+                        {/* Empty container prompt */}
+                        {container.components.length === 0 && (
+                          <div className="p-5 border border-dashed border-[#3b3c47] rounded-xl text-center space-y-1.5 bg-[#202128]">
+                            <Layers className="w-5 h-5 text-neutral-400 mx-auto" />
+                            <p className="text-xs font-bold text-neutral-200">Pusty kontener embed</p>
+                            <p className="text-[11px] text-neutral-400">
+                              Użyj przycisku poniżej, aby dodać sekcję tekstu, przyciski akcji, separator lub grafikę.
+                            </p>
+                          </div>
+                        )}
 
                         {/* Components Tree items inside this Container */}
                         <div className="space-y-3">
@@ -1298,17 +1313,17 @@ export function MessageStyleBuilder({ type, guild, onBackToDashboard }: MessageS
                 <span>+ Dodaj Nowy Kontener Embed ({containers.length}/5)</span>
               </button>
               <button
-                onClick={() => setContainers([])}
+                onClick={() => setContainers([getDefaultContainer()])}
                 className="px-3.5 py-2 bg-transparent hover:bg-rose-500/10 border border-rose-500/40 text-rose-400 rounded-xl text-xs font-bold transition-colors cursor-pointer"
               >
-                Wyczyść wszystkie
+                Wyczyść do pustego embedu
               </button>
             </div>
           </div>
         </div>
 
         {/* RIGHT COLUMN: INTERACTIVE DISCORD LIVE SIMULATOR */}
-        <div className="lg:col-span-5 p-6 bg-[#202128] overflow-y-auto space-y-4 border-l border-[#282936]">
+        <div className="lg:col-span-5 p-6 bg-[#272831] overflow-y-auto space-y-4 border-l border-[#25262d]">
           <div className="flex items-center justify-between pb-3 border-b border-[#2d2e3c]">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-[#5865F2]" />

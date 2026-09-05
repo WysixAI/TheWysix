@@ -217,188 +217,29 @@ export function createDefaultAction(type: ComponentActionType = 'ephemeral_reply
 
 export function getDefaultContainer(): MessageContainer {
   return {
-    id: 'container-1',
+    id: `container-${Date.now()}`,
     color: '#5865F2',
     spoiler: false,
-    components: [
-      {
-        id: 'sec-1',
-        type: 'section',
-        accessory: {
-          type: 'Thumbnail',
-          url: 'https://cdn.discordapp.com/embed/avatars/0.png',
-          description: 'Logo serwera',
-          spoiler: false,
-        },
-        texts: [
-          {
-            id: 'txt-1',
-            content: '``` NAZWA SERWERA ```\nOPIS: Witamy na naszym serwerze, {user}! Życzymy udanego pobytu i zapraszamy do rozmów.',
-          },
-        ],
-      },
-      {
-        id: 'sep-1',
-        type: 'separator',
-        spacing: 'Small',
-        divider: true,
-      },
-      {
-        id: 'sec-2',
-        type: 'section',
-        accessory: {
-          type: 'None',
-          url: '',
-          description: '',
-        },
-        texts: [
-          {
-            id: 'txt-2',
-            content: '📜 **Regulamin:** Zapoznaj się z zasadami panującymi na serwerze.\n💬 **Pogadanki:** Dołącz do dyskusji na kanale głównym!',
-          },
-        ],
-      },
-      {
-        id: 'sep-2',
-        type: 'separator',
-        spacing: 'Small',
-        divider: true,
-      },
-      {
-        id: 'row-1',
-        type: 'action_row',
-        rowType: 'buttons',
-        buttons: [
-          {
-            id: 'btn-1',
-            label: 'Odwiedź stronę bota',
-            style: 'LINK',
-            url: 'https://kitekbot.vercel.app',
-            emoji: '🌐',
-          },
-          {
-            id: 'btn-2',
-            label: 'Zweryfikuj konto',
-            style: 'SUCCESS',
-            customId: 'verify_welcome_btn',
-            emoji: '✅',
-            actions: [
-              {
-                id: 'act-1',
-                type: 'give_role',
-                roleName: 'Zweryfikowany',
-                roleId: '',
-                target: 'ephemeral',
-                response: '✅ Zostałeś pomyślnie zweryfikowany i otrzymałeś dostęp do kanałów!',
-              },
-            ],
-          },
-        ],
-      },
-      {
-        id: 'row-menu-1',
-        type: 'action_row',
-        rowType: 'select_menu',
-        buttons: [],
-        selectMenu: {
-          id: 'menu-1',
-          customId: 'help_select_menu',
-          placeholder: 'Potrzebujesz Pomocy? Wybierz opcję...',
-          disabled: false,
-          minValues: 1,
-          maxValues: 1,
-          options: [
-            {
-              id: 'opt-1',
-              label: 'POMOC #1 - Pilna pomoc administracji',
-              value: 'help_urgent',
-              description: 'Potrzebuję jak najszybszej pomocy moderatora',
-              emoji: '🚨',
-              actions: [
-                {
-                  id: 'act-m-1',
-                  type: 'text_response',
-                  target: 'channel',
-                  response: '🚨 {user} potrzebuje pilnej pomocy administratora na kanale!',
-                  publicReply: true,
-                  pingRoles: true,
-                },
-              ],
-            },
-            {
-              id: 'opt-2',
-              label: 'POMOC #2 - Zwykłe pytanie o serwer',
-              value: 'help_general',
-              description: 'Mam pytanie odnośnie zasad lub rang',
-              emoji: '💬',
-              actions: [
-                {
-                  id: 'act-m-2',
-                  type: 'ephemeral_reply',
-                  target: 'ephemeral',
-                  response: 'ℹ️ Sprawdź kanał z regulaminem lub napisz na kanale pomocy technicznej.',
-                },
-              ],
-            },
-          ],
-        },
-      },
-    ],
+    components: [],
   };
 }
 
 export function getDefaultWelcomeConfig(): WelcomeConfig {
-  const container = getDefaultContainer();
   return {
     enabled: true,
     channelId: null,
-    message: 'Hej {user}, witamy w naszych progach! 🌟 Rozgość się i zapoznaj z regulaminem.',
+    message: '',
     useEmbed: true,
-    containers: [container],
+    containers: [getDefaultContainer()],
     embed: {
       color: '#5865F2',
-      authorName: 'Oficjalny Serwer KitekBot',
-      authorIcon: 'https://cdn.discordapp.com/embed/avatars/0.png',
-      authorUrl: '',
-      title: '👋 Witamy nowego użytkownika!',
-      titleUrl: '',
-      description: 'Cieszymy się, że jesteś z nami, **{user}**! Jesteś naszym **{memberCount}** członkiem na serwerze **{server.name}**!\n\nPamiętaj, aby zachowywać kulturę i sprawdzić poniższe kanały:',
-      fields: [
-        {
-          id: 'f-1',
-          name: '📜 Regulamin',
-          value: 'Sprawdź najważniejsze zasady panujące na serwerze.',
-          inline: true,
-        },
-        {
-          id: 'f-2',
-          name: '💬 Dyskusje',
-          value: 'Dołącz do rozmów na kanale głównym!',
-          inline: true,
-        },
-      ],
-      thumbnailUrl: '',
-      imageUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80',
-      footerText: 'KitekBot Welcome System • Życzymy miłej zabawy!',
-      footerIcon: 'https://cdn.discordapp.com/embed/avatars/0.png',
-      includeTimestamp: true,
+      title: '',
+      description: '',
+      fields: [],
+      footerText: '',
+      includeTimestamp: false,
     },
-    buttons: [
-      {
-        id: 'btn-1',
-        label: 'Odwiedź stronę bota',
-        style: 'LINK',
-        url: 'https://kitekbot.vercel.app',
-        emoji: '🌐',
-      },
-      {
-        id: 'btn-2',
-        label: 'Zweryfikuj konto',
-        style: 'SUCCESS',
-        customId: 'verify_welcome_btn',
-        emoji: '✅',
-      },
-    ],
+    buttons: [],
   };
 }
 
@@ -406,45 +247,23 @@ export function getDefaultGoodbyeConfig(): GoodbyeConfig {
   return {
     enabled: true,
     channelId: null,
-    message: '{user} opuścił nasz serwer. Żegnaj i powodzenia! 👋',
+    message: '',
     useEmbed: true,
     containers: [
       {
-        id: 'container-goodbye',
+        id: `container-${Date.now()}`,
         color: '#ED4245',
         spoiler: false,
-        components: [
-          {
-            id: 'sec-goodbye-1',
-            type: 'section',
-            accessory: {
-              type: 'Thumbnail',
-              url: 'https://cdn.discordapp.com/embed/avatars/1.png',
-              description: 'Pożegnanie',
-            },
-            texts: [
-              {
-                id: 'txt-goodbye-1',
-                content: '``` POŻEGNANIE ```\n**{user}** opuścił serwer **{server.name}**.\nZostało nas teraz **{memberCount}** członków.',
-              },
-            ],
-          },
-          {
-            id: 'sep-goodbye-1',
-            type: 'separator',
-            spacing: 'Small',
-            divider: true,
-          },
-        ],
+        components: [],
       },
     ],
     embed: {
       color: '#ED4245',
-      title: '👋 Ktoś opuścił serwer...',
-      description: '**{user}** opuścił nasz serwer **{server.name}**.\nZostało nas teraz **{memberCount}** członków.',
+      title: '',
+      description: '',
       fields: [],
-      footerText: 'KitekBot Goodbye System',
-      includeTimestamp: true,
+      footerText: '',
+      includeTimestamp: false,
     },
     buttons: [],
   };

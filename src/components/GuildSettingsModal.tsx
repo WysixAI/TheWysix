@@ -51,117 +51,6 @@ const DISCORD_COLOR_PALETTE = [
   { name: 'White', hex: '#FFFFFF' },
 ];
 
-const PRESETS = [
-  {
-    id: 'community',
-    name: '🌟 Nowoczesna Społeczność',
-    desc: 'Profesjonalny embed z banerem, polami pomocy i przyciskami akcji',
-    data: {
-      enabled: true,
-      message: 'Hej {user}, witamy na oficjalnym serwerze **{server.name}**! 🎉',
-      useEmbed: true,
-      embed: {
-        color: '#5865F2',
-        authorName: 'Oficjalny Serwer KitekBot',
-        authorIcon: 'https://cdn.discordapp.com/embed/avatars/0.png',
-        authorUrl: '',
-        title: '👋 Witamy nowego użytkownika!',
-        titleUrl: '',
-        description: 'Cieszymy się, że do nas dołączasz, **{user}**! Jesteś naszym **{memberCount}** członkiem!\n\nZapoznaj się z poniższymi informacjami przed rozpoczęciem rozmów:',
-        fields: [
-          { id: 'f1', name: '📜 Regulamin', value: 'Przestrzegaj zasad netykiety i kultury.', inline: true },
-          { id: 'f2', name: '💬 Pogaduchy', value: 'Wpadaj na kanał główny i przywitaj się!', inline: true },
-        ],
-        thumbnailUrl: '',
-        imageUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80',
-        footerText: 'KitekBot Welcome System • Miłego pobytu!',
-        footerIcon: 'https://cdn.discordapp.com/embed/avatars/0.png',
-        includeTimestamp: true,
-      },
-      buttons: [
-        { id: 'b1', label: 'Odwiedź stronę', style: 'LINK' as const, url: 'https://kitekbot.vercel.app', emoji: '🌐' },
-        { id: 'b2', label: 'Zweryfikuj się', style: 'SUCCESS' as const, customId: 'verify_user_btn', emoji: '✅' },
-      ],
-    },
-  },
-  {
-    id: 'gaming',
-    name: '🎮 Gaming & E-Sport',
-    desc: 'Zielony, dynamiczny styl dla klanów i serwerów graczy',
-    data: {
-      enabled: true,
-      message: '⚔️ Nowy gracz na arenie: {user}! Przygotuj się do rozgrywki!',
-      useEmbed: true,
-      embed: {
-        color: '#57F287',
-        authorName: 'Strefa Graczy Discord',
-        authorIcon: 'https://cdn.discordapp.com/embed/avatars/2.png',
-        authorUrl: '',
-        title: '🏆 Nowy członek drużyny!',
-        titleUrl: '',
-        description: 'Witaj w składzie, **{user}**! Zbierz ekipię i ruszaj do gry na **{server.name}**.',
-        fields: [
-          { id: 'f1', name: '🎮 Kanały Głosowe', value: 'Dołącz do wolnego pokoju na dole.', inline: true },
-          { id: 'f2', name: '🛡️ Role Rang', value: 'Odbierz role gier na dedykowanym kanale.', inline: true },
-        ],
-        thumbnailUrl: 'https://cdn.discordapp.com/embed/avatars/2.png',
-        imageUrl: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80',
-        footerText: 'Status: Gotowy do gry',
-        footerIcon: '',
-        includeTimestamp: true,
-      },
-      buttons: [
-        { id: 'b1', label: 'Wybierz gry', style: 'PRIMARY' as const, customId: 'select_games_btn', emoji: '🎯' },
-        { id: 'b2', label: 'Zgłoś się do klanu', style: 'SECONDARY' as const, customId: 'clan_apply_btn', emoji: '⚔️' },
-      ],
-    },
-  },
-  {
-    id: 'minimal',
-    name: '💎 Elegancki Minimalizm',
-    desc: 'Stonowany, estetyczny błękit bez zbędnych grafik',
-    data: {
-      enabled: true,
-      message: 'Witaj {user}!',
-      useEmbed: true,
-      embed: {
-        color: '#00B0F4',
-        authorName: '',
-        authorIcon: '',
-        authorUrl: '',
-        title: 'Witamy w społeczności!',
-        titleUrl: '',
-        description: 'Dziękujemy za dołączenie do **{server.name}**! Jesteś **{memberCount}** osobą w naszej społeczności.',
-        fields: [],
-        thumbnailUrl: '',
-        imageUrl: '',
-        footerText: 'Życzymy udanego czasu',
-        footerIcon: '',
-        includeTimestamp: false,
-      },
-      buttons: [
-        { id: 'b1', label: 'Regulamin', style: 'LINK' as const, url: 'https://discord.com', emoji: '📌' },
-      ],
-    },
-  },
-  {
-    id: 'pure_text',
-    name: '💬 Czysty Tekst (Bez Embedu)',
-    desc: 'Klasyczna, prosta wiadomość bez karty Embed',
-    data: {
-      enabled: true,
-      message: 'Witaj {user} na serwerze **{server.name}**! Cieszymy się, że z nami jesteś 🎉 Życzymy miłego pobytu!',
-      useEmbed: false,
-      embed: {
-        color: '#5865F2',
-        fields: [],
-        includeTimestamp: false,
-      },
-      buttons: [],
-    },
-  },
-];
-
 export function GuildSettingsModal({ guild, onClose }: GuildSettingsModalProps) {
   const [config, setConfig] = useState<GuildConfig | null>(null);
   const [loading, setLoading] = useState(true);
@@ -169,7 +58,7 @@ export function GuildSettingsModal({ guild, onClose }: GuildSettingsModalProps) 
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [botChannels, setBotChannels] = useState<{ id: string; name: string; type: number }[]>([]);
-  const [activeTab, setActiveTab] = useState<'content' | 'embed' | 'buttons' | 'presets'>('content');
+  const [activeTab, setActiveTab] = useState<'content' | 'embed' | 'buttons'>('content');
   const [sendingTest, setSendingTest] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const [copiedJson, setCopiedJson] = useState(false);
@@ -364,14 +253,6 @@ export function GuildSettingsModal({ guild, onClose }: GuildSettingsModalProps) 
     }
     setCopiedVar(variableKey);
     setTimeout(() => setCopiedVar(null), 1500);
-  };
-
-  const loadPreset = (preset: typeof PRESETS[0]) => {
-    if (!config) return;
-    updateWelcome({
-      ...preset.data,
-      channelId: config.welcome.channelId,
-    });
   };
 
   const copyJsonPayload = () => {
@@ -616,18 +497,6 @@ export function GuildSettingsModal({ guild, onClose }: GuildSettingsModalProps) 
                 >
                   <MousePointerClick className="w-3.5 h-3.5" />
                   <span>3. Przyciski ({welcome.buttons?.length || 0}/5)</span>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('presets')}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all ${
-                    activeTab === 'presets'
-                      ? 'bg-[#5865F2] text-white shadow-sm'
-                      : 'text-neutral-400 hover:text-white hover:bg-[#2b2d31]'
-                  }`}
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                  <span>4. Szablony Presets</span>
                 </button>
               </div>
 
@@ -1119,49 +988,6 @@ export function GuildSettingsModal({ guild, onClose }: GuildSettingsModalProps) 
                         </p>
                       </div>
                     )}
-                  </div>
-                )}
-
-                {/* 4. SZABLONY PRESETS */}
-                {activeTab === 'presets' && (
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-300">
-                        Gotowe szablony powitań (Message.style Presets)
-                      </h4>
-                      <p className="text-[11px] text-neutral-400 mt-0.5">
-                        Wybierz styl, aby natychmiast załadować profesjonalną kompozycję tekstu, kolorów i przycisków:
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                      {PRESETS.map((p) => (
-                        <div
-                          key={p.id}
-                          onClick={() => loadPreset(p)}
-                          className="p-4 bg-[#1e1f22] hover:bg-[#282a30] border border-[#35373c] hover:border-[#5865F2] rounded-xl cursor-pointer transition-all space-y-2 group shadow-sm"
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-black text-white group-hover:text-indigo-300 transition-colors">
-                              {p.name}
-                            </span>
-                            <span className="text-[10px] uppercase font-bold text-indigo-400 bg-[#5865F2]/10 px-2 py-0.5 rounded">
-                              Załaduj
-                            </span>
-                          </div>
-                          <p className="text-[11px] text-neutral-400 leading-normal">{p.desc}</p>
-                          <div className="pt-2 border-t border-[#2d2e36] flex items-center gap-2">
-                            <div
-                              className="w-3 h-3 rounded-full"
-                              style={{ backgroundColor: p.data.embed?.color || '#5865F2' }}
-                            />
-                            <span className="text-[10px] font-mono text-neutral-500">
-                              {p.data.useEmbed ? 'Embed + Przyciski' : 'Czysty Tekst'}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
                   </div>
                 )}
               </div>

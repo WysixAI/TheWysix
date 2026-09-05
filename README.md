@@ -1,6 +1,6 @@
 # 🐾 KitekBot Dashboard & Discord Bot
 
-> **Aktualna wersja:** `v5.0.0`  
+> **Aktualna wersja:** `v5.3.0`  
 > **Status:** Stabilna / Produkcyjna  
 > **Ostatnia aktualizacja:** 05.09.2026
 
@@ -11,7 +11,7 @@ Oficjalna strona internetowa, panel zarządzania (Dashboard) oraz zintegrowany b
 ## 📌 Zasada Wersjonowania i Aktualizacji (Versioning Policy)
 
 > **Reguła projektu:**  
-> **Każda zmiana, nowa funkcja lub poprawka na stronie internetowej lub w bocie ZAWSZE podbija wersję (np. `v4.9.0` ➔ `v5.0.0`) oraz jest automatycznie dokumentowana w pliku `README.md`, w historii zmian (Changelog w sekcji „Pobierz Pliki”) oraz w `package.json` bota.**
+> **Każda zmiana, nowa funkcja lub poprawka na stronie internetowej lub w bocie ZAWSZE podbija wersję (np. `v5.2.0` ➔ `v5.3.0`) oraz jest automatycznie dokumentowana w pliku `README.md`, w historii zmian (Changelog w sekcji „Pobierz Pliki”) oraz w `package.json` bota.**
 
 Dzięki temu użytkownik i administrator zawsze mają pewność, z której wersji korzystają i jakie zmiany zaszły w systemie.
 
@@ -19,7 +19,50 @@ Dzięki temu użytkownik i administrator zawsze mają pewność, z której wersj
 
 ## 🚀 Historia Wersji i Zmian (Changelog)
 
-### 🌟 `v5.0.0` (Najnowsza — 05.09.2026)
+### 🌟 `v5.3.0` (Najnowsza — 05.09.2026)
+- ⚡ **Akcje przycisków w Action Row (Button Actions)**:
+  - Wprowadzono zaawansowany kreator akcji pod przyciskami:
+    - **Kick (Wyrzucenie)**: wyrzucenie użytkownika z serwera z konfigurowalnym powodem.
+    - **Ban (Zbanowanie)**: zbanowanie użytkownika z określeniem liczby dni usunięcia wiadomości (0-7) i powodem.
+    - **Send Message**: wysłanie publicznej wiadomości na kanale z obsługą zmiennych (`{user}`, `{server.name}`).
+    - **Ephemeral Message**: dyskretna odpowiedź tekstowa widoczna wyłącznie dla osoby klikającej przycisk.
+    - **Give Role**: natychmiastowe nadanie wskazanej roli Discord po kliknięciu.
+    - **Remove Role**: odebranie wskazanej roli Discord.
+    - **Send DM**: wysłanie prywatnej wiadomości bezpośrednio na skrzynkę użytkownika (Direct Message).
+- 🧹 **Usunięcie szablonów i automatyczny czysty/pusty embed**:
+  - Całkowicie wycofano narzucone z góry szablony (Presets), aby dać użytkownikowi 100% swobody projektowania.
+  - Nowy kontener Embed tworzy się teraz jako czysta, pusta karta z estetycznym placeholderem i podpowiedzią dodania pierwszego komponentu.
+  - Wprowadzono przycisk **„Wyczyść do pustego embedu”**, który nie usuwa widoku, lecz przywraca pojedynczy czysty kontener.
+- 🎨 **Pełna spójność kolorystyczna GUI z motywem KitekBot**:
+  - Zsynchronizowano barwy kreatora z motywem strony: tło panelu (`#32333d`), belki nawigacyjne (`#2d2e36`), karty i kontenery (`#272831`, `#202128`), obramowania (`#3b3c47`) oraz akcent Blurple (`#5865F2`).
+- 🧩 **Więcej komponentów Discord**:
+  - Rozbudowane sekcje (Sections) z tekstem i załącznikami wizualnymi (Thumbnail i Image).
+  - Pasek szybkiego formatowania Markdown (B, I, U, S, @, emoji).
+  - Separatory (Spacing Small, Medium, Large) z opcją stylizowanej kreski (Divider).
+  - Komponent Media (samodzielny baner graficzny ze spoilerem).
+  - Wiersze akcji (Action Row) obsługujące przyciski oraz rozwijane menu (String Select Menu).
+- 🔄 **Natychmiastowe wykonywanie akcji w silniku bota**:
+  - Zaktualizowano zdarzenie `interactionCreate` w `index.js` o obsługę wszystkich zdefiniowanych w panelu akcji przycisków i menu.
+
+---
+
+### `v5.2.0` (05.09.2026)
+- 🔘 **Obsługa interaktywnych menu (String Select Menu)**:
+  - Dodano możliwość dodania Select Menu do Action Row (wielokrotne opcje, emoji, opisy, wartości, min/max wyborów).
+- 🎯 **Symulator podglądu na żywo z interakcją**:
+  - Kliknięcie przycisku lub wybór z menu w podglądzie symuluje wykonanie akcji (komunikat ephemeral i powiadomienie bota).
+
+---
+
+### `v5.1.0` (05.09.2026)
+- 🌲 **Struktura drzewiasta komponentów (Component Tree Builder)**:
+  - Wprowadzono wielopoziomowe kontenery Embed z możliwością dodawania sekcji, separatorów, grafik i wierszy akcji.
+- 👋 **Moduł Pożegnań (/goodbye)**:
+  - Dodano pełne wsparcie dla powiadomień o odejściu członków serwera z osobnym kreatorem wiadomości.
+
+---
+
+### `v5.0.0` (05.09.2026)
 - 🧹 **Usunięcie zbędnych modułów bota**:
   - Całkowicie usunięto moduł Ekonomia (`/daily`, monety) oraz moduły moderacji i pożegnań z bota i konfiguracji serwerów.
   - Skupiono architekturę bota i panelu w 100% na najwyższej jakości module powitań (Welcome System).
