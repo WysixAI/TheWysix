@@ -24,105 +24,67 @@ app.use((req, res, next) => {
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID || '1368350667634376785';
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET || '-c7yfLwX-ZojIhLF3TCHZxavvmLyCN9K';
 
-// Upstash Redis REST API Config
-const REDIS_URL = (process.env.UPSTASH_REDIS_REST_URL || 'https://cosmic-marmot-247512.upstash.io').replace(/\/$/, '');
-const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || 'gQAAAAAAA8bYAAIgcDIwZDAyNGExZjIxOTE0ZGUxYjg2NTA4ODk4ZmMxOGQ2MA';
-const REDIS_KEY = 'bot_guild_ids';
+// Storage dla serwerów bota (pamięć RAM + pliki lokalne dla zachowania stanu)
+const GUILDS_FILE = path.join(process.cwd(), 'Serwery', 'bot_guilds.json');
+const TMP_GUILDS_FILE = '/tmp/kitek_bot_guilds.json';
 
-// In-memory instant fallback cache
 let memoryBotGuilds: string[] = [];
 
-const sessions = new Map<string, any>();
-
-async function saveSession(sessionId: string, userPayload: any) {
-  sessions.set(sessionId, userPayload);
+function loadBotGuilds(): string[] {
+  if (memoryBotGuilds.length > 0) return memoryBotGuilds;
   try {
-    if (REDIS_URL && REDIS_TOKEN) {
-      await fetch(REDIS_URL, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${REDIS_TOKEN}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(['SET', `session:${sessionId}`, JSON.stringify(userPayload), 'EX', 7 * 24 * 60 * 60]),
-      });
-    }
-  } catch (e: any) {
-    console.warn(`[Redis] Nie udało się zapisać sesji do Redis:`, e.message);
-  }
-}
-
-async function getSession(sessionId: string): Promise<any | null> {
-  if (sessions.has(sessionId)) return sessions.get(sessionId);
-  try {
-    if (REDIS_URL && REDIS_TOKEN) {
-      const res = await fetch(`${REDIS_URL}/get/session:${sessionId}`, {
-        headers: { Authorization: `Bearer ${REDIS_TOKEN}` },
-        cache: 'no-store',
-      });
-      const data = await res.json();
-      if (data && data.result) {
-        let parsed = data.result;
-        if (typeof parsed === 'string') {
-          try { parsed = JSON.parse(parsed); } catch {}
-        }
-        if (parsed && typeof parsed === 'object') {
-          sessions.set(sessionId, parsed);
-          return parsed;
-        }
+    if (fs.existsSync(GUILDS_FILE)) {
+      const data = JSON.parse(fs.readFileSync(GUILDS_FILE, 'utf-8'));
+      if (Array.isArray(data)) {
+        memoryBotGuilds = Array.from(new Set(data.map((id) => String(id).trim()).filter(Boolean)));
+        return memoryBotGuilds;
       }
     }
-  } catch (e: any) {
-    console.warn(`[Redis] Nie udało się odczytać sesji z Redis:`, e.message);
-  }
-  return null;
-}
-
-async function redisGet(key: string): Promise<string[]> {
+  } catch {}
   try {
-    if (!REDIS_URL || !REDIS_TOKEN) return memoryBotGuilds;
-    const res = await fetch(`${REDIS_URL}/get/${key}`, {
-      headers: { Authorization: `Bearer ${REDIS_TOKEN}` },
-      cache: 'no-store'
-    });
-    const data = await res.json();
-    if (data && data.result) {
-      let parsed = data.result;
-      if (typeof parsed === 'string') {
-        try { parsed = JSON.parse(parsed); } catch {}
-      }
-      if (typeof parsed === 'string') {
-        try { parsed = JSON.parse(parsed); } catch {}
-      }
-      if (Array.isArray(parsed)) {
-        const cleanList = parsed.map(String).map((id) => id.trim()).filter(Boolean);
-        memoryBotGuilds = cleanList;
-        return cleanList;
+    if (fs.existsSync(TMP_GUILDS_FILE)) {
+      const data = JSON.parse(fs.readFileSync(TMP_GUILDS_FILE, 'utf-8'));
+      if (Array.isArray(data)) {
+        memoryBotGuilds = Array.from(new Set(data.map((id) => String(id).trim()).filter(Boolean)));
+        return memoryBotGuilds;
       }
     }
-    return memoryBotGuilds;
-  } catch (err: any) {
-    console.error(`[Redis] Error in redisGet:`, err.message);
-    return memoryBotGuilds;
-  }
+  } catch {}
+  return memoryBotGuilds;
 }
 
-async function redisSet(key: string, value: string[]) {
-  const clean = Array.from(new Set(value.map(String).map((id) => id.trim()).filter(Boolean)));
+function saveBotGuilds(guilds: string[]) {
+  const clean = Array.from(new Set(guilds.map((id) => String(id).trim()).filter(Boolean)));
   memoryBotGuilds = clean;
   try {
-    if (!REDIS_URL || !REDIS_TOKEN) return;
-    await fetch(REDIS_URL, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${REDIS_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(['SET', key, JSON.stringify(clean)]),
-    });
-  } catch (err: any) {
-    console.error(`[Redis] Error in redisSet:`, err.message);
+    const dir = path.dirname(GUILDS_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(GUILDS_FILE, JSON.stringify(clean, null, 2), 'utf-8');
+  } catch {}
+  try {
+    fs.writeFileSync(TMP_GUILDS_FILE, JSON.stringify(clean), 'utf-8');
+  } catch {}
+}
+
+// Sesje w pamięci podręcznej z automatyczną obsługą cookies bez bazy danych
+const sessions = new Map<string, any>();
+
+function saveSession(sessionId: string, userPayload: any) {
+  sessions.set(sessionId, userPayload);
+}
+
+function getSession(sessionId: string, cookieUserPayload?: string): any | null {
+  if (sessions.has(sessionId)) return sessions.get(sessionId);
+  if (cookieUserPayload) {
+    try {
+      const decoded = JSON.parse(Buffer.from(cookieUserPayload, 'base64').toString('utf-8'));
+      if (decoded && decoded.id) {
+        sessions.set(sessionId, decoded);
+        return decoded;
+      }
+    } catch {}
   }
+  return null;
 }
 
 // Direct REST API Connection with Discord Bot
@@ -179,13 +141,12 @@ app.get('/api/bot/events', (req, res) => {
   sseClients.add(res);
 
   // Send current guilds immediately on connect
-  redisGet(REDIS_KEY).then((guilds) => {
-    try {
-      res.write(`data: ${JSON.stringify({ type: 'GUILD_LIST', guildIds: guilds })}\n\n`);
-    } catch {
-      sseClients.delete(res);
-    }
-  });
+  try {
+    const guilds = loadBotGuilds();
+    res.write(`data: ${JSON.stringify({ type: 'GUILD_LIST', guildIds: guilds })}\n\n`);
+  } catch {
+    sseClients.delete(res);
+  }
 
   req.on('close', () => {
     sseClients.delete(res);
@@ -217,7 +178,7 @@ app.get('/api/bot/events', (req, res) => {
 
           if (rawBotList.length > 0 || Array.isArray(botData.guildIds) || Array.isArray(botData.guilds)) {
             const cleanIds: string[] = Array.from(new Set<string>(rawBotList.map((id: string) => id.trim()).filter(Boolean)));
-            await redisSet(REDIS_KEY, cleanIds);
+            saveBotGuilds(cleanIds);
             broadcastBotGuilds(cleanIds);
             return res.json({
               online: true,
@@ -231,11 +192,11 @@ app.get('/api/bot/events', (req, res) => {
           }
         }
       } catch (err: any) {
-        // Fallback to Redis / in-memory cache
+        // Fallback to in-memory cache
       }
     }
 
-    const rawGuildIds = await redisGet(REDIS_KEY);
+    const rawGuildIds = loadBotGuilds();
     const cleanGuilds = Array.from(new Set(rawGuildIds.map((id) => String(id).trim()).filter(Boolean)));
     const isRecentlyActive = (Date.now() - botLastHeartbeat) < 60000;
 
@@ -323,7 +284,7 @@ app.get('/api/bot/events', (req, res) => {
 
             // If bot returned guilds, sync them right now
             if (testResult && Array.isArray(testResult.guildIds)) {
-              await redisSet(REDIS_KEY, testResult.guildIds);
+              saveBotGuilds(testResult.guildIds);
               broadcastBotGuilds(testResult.guildIds);
             }
           }
@@ -439,7 +400,7 @@ app.get('/api/bot/events', (req, res) => {
   // API: Sync bot guilds from external bot instance (GET & POST)
   const handleBotSyncGet = async (req: express.Request, res: express.Response) => {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
-    const current = await redisGet(REDIS_KEY);
+    const current = loadBotGuilds();
     const cleanGuilds = Array.from(new Set(current.map((id) => String(id).trim()).filter(Boolean)));
     const isRecentlyActive = (Date.now() - botLastHeartbeat) < 60000;
 
@@ -504,7 +465,7 @@ app.get('/api/bot/events', (req, res) => {
         return [String(input).trim()].filter(Boolean);
       };
 
-      let current = await redisGet(REDIS_KEY);
+      let current = loadBotGuilds();
       let currentSet = new Set<string>(current.map((id) => String(id).trim()).filter(Boolean));
 
       const hasExplicitGuildList = Array.isArray(guilds) || Array.isArray(guildIds);
@@ -538,7 +499,7 @@ app.get('/api/bot/events', (req, res) => {
       }
 
       const finalIds = Array.from(currentSet);
-      await redisSet(REDIS_KEY, finalIds);
+      saveBotGuilds(finalIds);
 
       // Aktualizacja liczby serwerów w statusie
       botLatestStatus.guildsCount = finalIds.length;
@@ -653,8 +614,6 @@ app.get('/api/bot/events', (req, res) => {
         '# Zmienne środowiskowe KitekBot Dashboard\n' +
         'DISCORD_CLIENT_ID=1368350667634376785\n' +
         'DISCORD_CLIENT_SECRET=-c7yfLwX-ZojIhLF3TCHZxavvmLyCN9K\n' +
-        'UPSTASH_REDIS_REST_URL=https://cosmic-marmot-247512.upstash.io\n' +
-        'UPSTASH_REDIS_REST_TOKEN=gQAAAAAAA8bYAAIgcDIwZDAyNGExZjIxOTE0ZGUxYjg2NTA4ODk4ZmMxOGQ2MA\n' +
         'PORT=3000\n'
       );
 
@@ -819,9 +778,16 @@ app.get('/api/bot/events', (req, res) => {
         guilds: manageableGuilds,
       };
 
-      await saveSession(sessionId, userPayload);
+      saveSession(sessionId, userPayload);
+      const encodedUser = Buffer.from(JSON.stringify(userPayload)).toString('base64');
 
       res.cookie('kitek_session', sessionId, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'none',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      });
+      res.cookie('kitek_user', encodedUser, {
         httpOnly: true,
         secure: true,
         sameSite: 'none',
@@ -913,10 +879,11 @@ app.get('/api/bot/events', (req, res) => {
   app.post('/api/auth/exchange', handleCallback);
 
   // API 3: Get logged in user details
-  app.get('/api/auth/me', async (req, res) => {
+  app.get('/api/auth/me', (req, res) => {
     const sessionId = req.cookies.kitek_session;
+    const cookieUser = req.cookies.kitek_user;
     if (sessionId) {
-      const user = await getSession(sessionId);
+      const user = getSession(sessionId, cookieUser);
       if (user) {
         return res.json({ authenticated: true, user });
       }
@@ -925,21 +892,17 @@ app.get('/api/bot/events', (req, res) => {
   });
 
   // API 4: Logout
-  app.post('/api/auth/logout', async (req, res) => {
+  app.post('/api/auth/logout', (req, res) => {
     const sessionId = req.cookies.kitek_session;
     if (sessionId) {
       sessions.delete(sessionId);
-      if (REDIS_URL && REDIS_TOKEN) {
-        try {
-          await fetch(REDIS_URL, {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${REDIS_TOKEN}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify(['DEL', `session:${sessionId}`]),
-          });
-        } catch {}
-      }
     }
     res.clearCookie('kitek_session', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+    });
+    res.clearCookie('kitek_user', {
       httpOnly: true,
       secure: true,
       sameSite: 'none',

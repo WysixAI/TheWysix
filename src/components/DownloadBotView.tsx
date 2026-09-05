@@ -12,10 +12,22 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
+    version: "v4.0.0",
+    date: "Dzisiaj, 05.09.2026",
+    badge: "NAJNOWSZA (v4.0.0)",
+    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Całkowicie usunięto Redis i wszelkie zewnętrzne bazy danych (brak wymogu UPSTASH_REDIS_REST_URL)",
+      "Błyskawiczna autoryzacja i synchronizacja bez opóźnień sieciowych zewnętrznych usług",
+      "Pamięć RAM + pliki lokalne dla zachowania stanu serwerów bez skomplikowanej konfiguracji",
+      "Pełna prostota i niezawodność działania 'out of the box' bez żadnych dodatkowych zależności"
+    ]
+  },
+  {
     version: "v3.9.0",
     date: "Dzisiaj, 05.09.2026",
-    badge: "NAJNOWSZA (v3.9.0)",
-    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    badge: "STABILNA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Zunifikowano architekturę API Vercel do jednego czystego endpointu api/index.js",
       "Skrócono build script w package.json do vite build oraz esbuild src/serverApp.ts -> api/index.js",
@@ -501,11 +513,11 @@ export function DownloadBotView() {
             Pobierz Cały Dashboard &amp; Backend (.ZIP)
           </h3>
           <p className="text-sm text-neutral-300 leading-relaxed font-medium">
-            Pobierz kompletną paczkę z całym panelem i serwerem: <code className="text-amber-400 bg-neutral-900/80 px-1.5 py-0.5 rounded font-mono text-xs">server.ts</code> (Express API, obsługa <code className="text-indigo-300 font-mono text-xs">/api/bot/sync</code>, Redis, SSE), frontend React 19 (<code className="text-emerald-400 font-mono text-xs">src/App.tsx</code>) oraz wzorzec <code className="text-purple-300 font-mono text-xs">.env.example</code>. Możesz natychmiast przejrzeć rzeczywisty przepływ danych w IDE.
+            Pobierz kompletną paczkę z całym panelem i serwerem: <code className="text-amber-400 bg-neutral-900/80 px-1.5 py-0.5 rounded font-mono text-xs">server.ts</code> (Express API, obsługa <code className="text-indigo-300 font-mono text-xs">/api/bot/sync</code>, pamięć i pliki lokalne, SSE), frontend React 19 (<code className="text-emerald-400 font-mono text-xs">src/App.tsx</code>) oraz wzorzec <code className="text-purple-300 font-mono text-xs">.env.example</code>. Możesz natychmiast przejrzeć rzeczywisty przepływ danych w IDE.
           </p>
           <div className="flex flex-wrap items-center gap-3 pt-1 text-xs text-neutral-400 font-mono">
             <span className="bg-[#181922] px-2.5 py-1 rounded-lg border border-[#343545]">
-              🔀 Przepływ: Bot &rarr; /api/bot/sync &rarr; Redis/RAM &rarr; SSE &rarr; React
+              🔀 Przepływ: Bot &rarr; /api/bot/sync &rarr; Pamięć/Plik &rarr; SSE &rarr; React
             </span>
           </div>
         </div>
