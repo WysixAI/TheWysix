@@ -11,8 +11,8 @@ export function generateBotZip(
   // 1. package.json
   const packageJson = {
     name: "kitek-bot",
-    version: "2.6.0",
-    description: "KitekBot Discord Bot v2.6.0 z dwukierunkowym REST / HTTPS API, wsparciem dla Vercel oraz autorytatywną synchronizacją w czasie rzeczywistym z Dashboardem",
+    version: "2.7.0",
+    description: "KitekBot Discord Bot v2.7.0 z dwukierunkowym REST / HTTPS API, wsparciem dla Vercel oraz autorytatywną synchronizacją w czasie rzeczywistym z Dashboardem",
     main: "index.js",
     scripts: {
       prestart: "npm install --no-audit --prefer-offline",
@@ -28,7 +28,7 @@ export function generateBotZip(
     devDependencies: {
       "nodemon": "^3.1.7"
     },
-    keywords: ["discord", "bot", "kitekbot", "dashboard", "rest-api", "vercel", "v2.6.0"],
+    keywords: ["discord", "bot", "kitekbot", "dashboard", "rest-api", "vercel", "v2.7.0"],
     author: "KitekBot Team",
     license: "ISC"
   };

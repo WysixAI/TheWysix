@@ -941,6 +941,7 @@ app.get('/api/bot/events', (req, res) => {
       redirectUriDev: 'https://ais-dev-5cjov5lzkdkahvqz3a7yun-454494415153.europe-west2.run.app/auth/callback',
       redirectUriPre: 'https://ais-pre-5cjov5lzkdkahvqz3a7yun-454494415153.europe-west2.run.app/auth/callback',
       redirectUriVercel: 'https://botdashboard-tau.vercel.app/auth/callback',
+      redirectUriKitekBot: 'https://kitekbot.vercel.app/auth/callback',
       currentAppUrl: appUrl,
     });
   });

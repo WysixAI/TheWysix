@@ -12,10 +12,22 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
+    version: "v2.7.0",
+    date: "Dzisiaj, 05.09.2026",
+    badge: "NAJNOWSZA (v2.7.0)",
+    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Dodano interaktywnego asystenta konfiguracji OAuth2 Redirect URI z kopiowaniem adresu domeny jednym kliknięciem (rozwiązanie błędu 'Nieprawidłowe parametry adresu URL')",
+      "Obsługa niestandardowych i produkcyjnych domen Vercel (m.in. kitekbot.vercel.app)",
+      "Zapewniono bezpośrednie odnośniki do konfiguracji Discord Developer Portal",
+      "Aktualizacja silnika synchronizacji i obsługi logowania"
+    ]
+  },
+  {
     version: "v2.6.0",
     date: "Dzisiaj, 05.09.2026",
-    badge: "NAJNOWSZA (v2.6.0)",
-    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    badge: "STABILNA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Pełne wsparcie i optymalizacja hostingu pod platformę Vercel (eliminacja błędu 404 na /auth/callback)",
       "Wdrożono bezserwerowy punkt wejścia /api/index.ts oraz kompleksowe reguły routingu rewrites w vercel.json",
