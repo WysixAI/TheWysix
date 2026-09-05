@@ -3,6 +3,7 @@ import { LogIn, LogOut, Plus, ShieldCheck, Crown, ExternalLink, RefreshCw, Loade
 import { GuildSettingsModal } from './components/GuildSettingsModal';
 import { DownloadBotView } from './components/DownloadBotView';
 import { BotApiConnectionModal } from './components/BotApiConnectionModal';
+import { WelcomesGoodbyesView } from './components/WelcomesGoodbyesView';
 
 interface DiscordGuild {
   id: string;
@@ -627,9 +628,14 @@ export default function App() {
     }, 60000);
   };
 
-  const isDashboard = currentPath === '/dashboard';
+  const isWelcomes =
+    currentPath === '/PowitaniaIPozegnania' ||
+    currentPath === '/powitania-i-pozegnania' ||
+    currentPath === '/powitania' ||
+    currentPath.toLowerCase().includes('powitania');
   const isDownload = currentPath === '/download' || currentPath === '/pobierz';
   const isLogin = currentPath === '/login';
+  const isDashboard = (currentPath === '/dashboard' || (!isDownload && !isLogin && !isWelcomes)) && Boolean(user);
 
   const userGuildsCount = user?.guilds?.length || 0;
   const isGuildBotPresent = (guildId: string) => {
@@ -700,44 +706,8 @@ export default function App() {
           </button>
         </div>
 
+        {/* Prawy róg paska górnego */}
         <div className="flex items-center gap-3">
-          {/* Przycisk statusu REST / HTTPS API bota */}
-          <button
-            id="topbar-bot-rest-api-btn"
-            onClick={() => setIsBotApiModalOpen(true)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#272831] hover:bg-[#202128] border border-[#3b3c47] hover:border-[#5865F2] text-xs font-bold transition-all cursor-pointer shadow-sm"
-            title="Kliknij, aby skonfigurować lub sprawdzić połączenie REST API bota"
-          >
-            {botConnectionInfo.botStatus === 'online' ? (
-              <>
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-emerald-400 font-extrabold hidden sm:inline">REST API:</span>
-                <span className="text-white font-extrabold">{botConnectionInfo.ping ? `${botConnectionInfo.ping}ms` : 'Online'}</span>
-              </>
-            ) : botConnectionInfo.botStatus === 'offline' ? (
-              <>
-                <span className="w-2 h-2 rounded-full bg-red-400" />
-                <span className="text-red-400 font-extrabold hidden sm:inline">REST API:</span>
-                <span className="text-neutral-300">Offline</span>
-              </>
-            ) : (
-              <>
-                <Radio className="w-3.5 h-3.5 text-amber-400" />
-                <span className="text-amber-400 font-bold hidden sm:inline">Połącz z botem</span>
-                <span className="text-neutral-400 text-[11px]">(REST API)</span>
-              </>
-            )}
-          </button>
-
-          {user && (
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#272831] border border-[#3b3c47] text-xs font-bold text-neutral-300">
-              <Server className="w-3.5 h-3.5 text-[#5865F2]" />
-              <span>Twoje serwery:</span>
-              <span className="text-white font-extrabold px-1.5 py-0.5 rounded bg-[#5865F2]/20 text-[#8590ff]">
-                {userGuildsCount}
-              </span>
-            </div>
-          )}
         </div>
       </header>
 
@@ -792,24 +762,21 @@ export default function App() {
                       </span>
                     </button>
 
-                    {/* Kategoria: Połączenie REST API */}
+                    {/* Kategoria: Powitania i Pożegnania (panel.kitekbot.vercel.app/PowitaniaIPozegnania) */}
                     <button
-                      id="category-rest-api-btn"
-                      onClick={() => setIsBotApiModalOpen(true)}
-                      className="w-full py-2.5 px-4 rounded-xl font-extrabold tracking-wide text-sm text-center uppercase transition-all duration-200 flex items-center justify-between cursor-pointer shadow-md bg-[#272831] hover:bg-[#202128] text-neutral-300 hover:text-white border border-[#3b3c47] hover:border-[#5865F2]"
+                      id="category-welcomes-btn"
+                      onClick={() => navigateTo('/PowitaniaIPozegnania')}
+                      className={`w-full py-2.5 px-4 rounded-xl font-extrabold tracking-wide text-sm text-center uppercase transition-all duration-200 flex items-center justify-between cursor-pointer shadow-md ${
+                        isWelcomes
+                          ? 'bg-[#272831] text-white border border-[#5865F2]/50 shadow-indigo-950/20'
+                          : 'bg-[#272831] hover:bg-[#202128] text-neutral-300 hover:text-white border border-[#3b3c47]'
+                      }`}
                       style={{ fontFamily: 'Montserrat, sans-serif' }}
                     >
                       <div className="flex items-center gap-3">
-                        <Radio className="w-4 h-4 shrink-0 text-amber-400" />
-                        <span>Połączenie REST</span>
+                        <Sparkles className="w-4 h-4 shrink-0 text-amber-400" />
+                        <span className="truncate">Powitania i Pożegnania</span>
                       </div>
-                      {botConnectionInfo.botStatus === 'online' ? (
-                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-500/50 animate-pulse" />
-                      ) : botConnectionInfo.botStatus === 'offline' ? (
-                        <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
-                      ) : (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] bg-amber-500/20 text-amber-400 font-bold">API</span>
-                      )}
                     </button>
 
                     {/* Kategoria: Pobierz Pliki */}
@@ -874,9 +841,9 @@ export default function App() {
                 </div>
               )}
 
-              {/* Kreska i napis v4.6.0 KitekBot */}
+              {/* Kreska i napis v4.7.0 KitekBot */}
               <div className="pt-3 border-t border-[#2a2b34] text-center text-xs text-neutral-400 font-medium">
-                v4.6.0 &bull; KitekBot REST API
+                v4.7.0 &bull; KitekBot
               </div>
             </div>
           </div>
@@ -896,22 +863,23 @@ export default function App() {
           {isDownload ? (
             /* WIDOK: POBIERZ PLIKI BOTA */
             <DownloadBotView />
+          ) : isWelcomes ? (
+            /* WIDOK: POWITANIA I POŻEGNANIA (EMBED V2 + COMPONENTS V2 + DRAG AND PUT) */
+            <WelcomesGoodbyesView
+              userGuilds={user?.guilds || []}
+              onBackToDashboard={() => navigateTo('/dashboard')}
+            />
           ) : user && isDashboard ? (
-            /* WIDOK DASHBOARD: LISTA SERWERÓW GDZIE UŻYTKOWNIK MOŻE DODAĆ BOTA LUB KLIKNĄĆ MANAGE */
+            /* WIDOK DASHBOARD: TYLKO SERWERY */
             <div className="w-full max-w-5xl mx-auto space-y-6">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-[#363744]">
                 <div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white flex items-center gap-3">
-                      <Server className="w-7 h-7 text-[#5865F2]" />
-                      <span>Wybierz serwer</span>
-                    </h1>
-                    <span className="px-3 py-1 rounded-xl bg-[#5865F2]/20 border border-[#5865F2]/40 text-[#8590ff] font-extrabold text-xs uppercase tracking-wide">
-                      Twoje serwery: {userGuildsCount}
-                    </span>
-                  </div>
+                  <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white flex items-center gap-3">
+                    <Server className="w-7 h-7 text-[#5865F2]" />
+                    <span>Wybierz serwer</span>
+                  </h1>
                   <p className="text-sm text-neutral-300 font-medium mt-1.5">
-                    Posiadasz uprawnienia na <strong className="text-white">{userGuildsCount}</strong> {userGuildsCount === 1 ? 'serwerze' : 'serwerach'}. Kliknij <span className="text-[#5865F2] font-bold">Manage</span> na serwerze z botem lub <span className="text-white font-bold">Dodaj bota</span>, aby go zaprosić.
+                    Kliknij <span className="text-[#5865F2] font-bold">Manage</span> na serwerze z botem lub <span className="text-white font-bold">Dodaj bota</span>, aby go zaprosić.
                   </p>
                 </div>
 
@@ -921,89 +889,10 @@ export default function App() {
                     fetchBotGuilds();
                   }}
                   title="Odśwież status serwerów"
-                  className="px-3.5 py-2 bg-[#2d2e36] hover:bg-[#25262e] border border-[#3b3c47] rounded-xl text-xs font-bold text-neutral-300 hover:text-white transition-all flex items-center gap-2 cursor-pointer shadow-sm"
+                  className="px-4 py-2 bg-[#2d2e36] hover:bg-[#25262e] border border-[#3b3c47] rounded-xl text-xs font-bold text-neutral-300 hover:text-white transition-all flex items-center gap-2 cursor-pointer shadow-sm"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
-                  <span>Odśwież ({activeWithBotCount} z botem)</span>
-                </button>
-              </div>
-
-              {/* Baner aktualnie zalogowanego konta z opcją natychmiastowej zmiany */}
-              <div className="p-3.5 sm:p-4 rounded-2xl bg-[#2a2b35] border border-[#3b3c47] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
-                <div className="flex items-center gap-3">
-                  <img
-                    src={user.avatar || `https://cdn.discordapp.com/embed/avatars/0.png`}
-                    alt={user.username}
-                    referrerPolicy="no-referrer"
-                    className="w-10 h-10 rounded-full border-2 border-[#5865F2] shrink-0"
-                  />
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-neutral-400 font-semibold uppercase tracking-wider">Zalogowano jako:</span>
-                      <span className="text-sm font-black text-white">{user.global_name || user.username}</span>
-                      <span className="text-xs text-indigo-300 font-medium font-mono">(@{user.username})</span>
-                    </div>
-                    <p className="text-[11px] text-neutral-400">
-                      Zarządzasz serwerami powiązanymi z Twoim kontem Discord.
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleLogout}
-                  className="px-3.5 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
-                  title="Wyloguj i zaloguj się na inne konto"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                  <span>To nie Twoje konto? Zmień konto</span>
-                </button>
-              </div>
-
-              {/* Baner informacyjny REST API */}
-              <div className="p-4 rounded-2xl bg-[#32333d] border border-[#3b3c47] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-md">
-                <div className="flex items-center gap-3.5">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
-                    botConnectionInfo.botStatus === 'online'
-                      ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400'
-                      : botConnectionInfo.botStatus === 'offline'
-                      ? 'bg-red-500/15 border-red-500/40 text-red-400'
-                      : 'bg-amber-500/15 border-amber-500/40 text-amber-400'
-                  }`}>
-                    {botConnectionInfo.botStatus === 'online' ? (
-                      <Wifi className="w-5 h-5" />
-                    ) : botConnectionInfo.botStatus === 'offline' ? (
-                      <WifiOff className="w-5 h-5" />
-                    ) : (
-                      <Radio className="w-5 h-5 animate-pulse" />
-                    )}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-extrabold text-white">
-                        {botConnectionInfo.botStatus === 'online'
-                          ? 'Połączono z Botem przez REST API'
-                          : botConnectionInfo.botStatus === 'offline'
-                          ? 'Brak połączenia z REST API Bota'
-                          : 'Połączenie z Botem przez REST / HTTPS API'}
-                      </span>
-                      <span className="px-2 py-0.2 rounded-md bg-[#5865F2]/20 border border-[#5865F2]/40 text-[#8590ff] text-[10px] font-black uppercase">
-                        v2.1.0
-                      </span>
-                    </div>
-                    <p className="text-xs text-neutral-300 mt-0.5">
-                      {botConnectionInfo.botStatus === 'online'
-                        ? `Bot jest aktywny i połączony z panelem (${botConnectionInfo.botTag || 'KitekBot'}). Ping: ${botConnectionInfo.ping ? botConnectionInfo.ping + 'ms' : 'OK'}.`
-                        : 'Wprowadź publiczny adres bota (np. z Pterodactyl lub VPS), aby panel bezpośrednio komunikował się z instancją bota.'}
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => setIsBotApiModalOpen(true)}
-                  className="px-4 py-2.5 bg-[#272831] hover:bg-[#202128] border border-[#484a58] hover:border-[#5865F2] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all flex items-center gap-2 cursor-pointer shrink-0 shadow-sm"
-                >
-                  <Radio className="w-3.5 h-3.5 text-amber-400" />
-                  <span>{botConnectionInfo.botStatus === 'online' ? 'Zarządzaj połączeniem API' : 'Skonfiguruj REST API'}</span>
+                  <span>Odśwież</span>
                 </button>
               </div>
 

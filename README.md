@@ -1,6 +1,6 @@
 # 🐾 KitekBot Dashboard & Discord Bot
 
-> **Aktualna wersja:** `v4.6.0`  
+> **Aktualna wersja:** `v4.7.0`  
 > **Status:** Stabilna / Produkcyjna  
 > **Ostatnia aktualizacja:** 05.09.2026
 
@@ -11,7 +11,7 @@ Oficjalna strona internetowa, panel zarządzania (Dashboard) oraz zintegrowany b
 ## 📌 Zasada Wersjonowania i Aktualizacji (Versioning Policy)
 
 > **Reguła projektu:**  
-> **Każda zmiana, nowa funkcja lub poprawka na stronie internetowej lub w bocie ZAWSZE podbija wersję (np. `v4.5.0` ➔ `v4.6.0`) oraz jest automatycznie dokumentowana w pliku `README.md`, w historii zmian (Changelog w sekcji „Pobierz Pliki”) oraz w `package.json` bota.**
+> **Każda zmiana, nowa funkcja lub poprawka na stronie internetowej lub w bocie ZAWSZE podbija wersję (np. `v4.6.0` ➔ `v4.7.0`) oraz jest automatycznie dokumentowana w pliku `README.md`, w historii zmian (Changelog w sekcji „Pobierz Pliki”) oraz w `package.json` bota.**
 
 Dzięki temu użytkownik i administrator zawsze mają pewność, z której wersji korzystają i jakie zmiany zaszły w systemie.
 
@@ -19,7 +19,22 @@ Dzięki temu użytkownik i administrator zawsze mają pewność, z której wersj
 
 ## 🚀 Historia Wersji i Zmian (Changelog)
 
-### 🌟 `v4.6.0` (Najnowsza — 05.09.2026)
+### 🌟 `v4.7.0` (Najnowsza — 05.09.2026)
+- 🧹 **Oczyszczenie interfejsu i uproszczenie Dashboardu**:
+  - Usunięto zbędną kategorię „Połączenie REST” z paska bocznego.
+  - Usunięto z prawego górnego rogu widgety „Twoje serwery: X” oraz przycisk „Połącz z botem”.
+  - Przycisk odświeżania na liście serwerów został uproszczony do czystego napisu **„Odśwież”**.
+  - Usunięto banery profilu i statusu REST z Dashboardu — teraz pod nagłówkiem natychmiast wyświetla się czysta siatka serwerów.
+- 🔗 **Przejście na routing URL dla funkcji (`panel.kitekbot.vercel.app/NazwaFunkcji`)**:
+  - Pasek boczny przełącza teraz dedykowane ścieżki URL (np. `/PowitaniaIPozegnania`, `/dashboard`, `/download`).
+- 🎨 **Kreator Powitania i Pożegnania (Embed v2 + Component v2 + Drag & Put)**:
+  - Wdrożono pełny edytor Powitań i Pożegnań z generatorem Embed v2.
+  - Dodano Components v2: interaktywne przyciski i Select Menu z niestandardowymi grafikami i stylami.
+  - System Drag & Put (przeciągnij i upuść) umożliwiający intuicyjną zmianę kolejności pól oraz komponentów.
+
+---
+
+### `v4.6.0` (05.09.2026)
 - 📄 **Dodano oficjalny plik `README.md`**:
   - Prezentacja bieżącej wersji strony oraz bota Discord (`v4.6.0`).
   - Ustanowienie oficjalnej zasady podbijania wersji przy każdej zmianie i aktualizacji strony.

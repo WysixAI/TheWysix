@@ -12,10 +12,22 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
+    version: "v4.7.0",
+    date: "Dzisiaj, 05.09.2026",
+    badge: "NAJNOWSZA (v4.7.0)",
+    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Oczyszczenie interfejsu i uproszczenie paska górnego oraz bocznego (usunięto Połączenie REST, licznik serwerów i zbędne banery)",
+      "Przycisk odświeżania na liście serwerów został uproszczony do czystego napisu 'Odśwież'",
+      "Przejście na bezpośredni routing URL funkcji: panel.kitekbot.vercel.app/PowitaniaIPozegnania",
+      "Dodano pełny moduł Powitania i Pożegnania z zaawansowanym kreatorem Embed v2, Components v2 (przyciski, select menu z własnymi grafikami) oraz systemem Drag & Put"
+    ]
+  },
+  {
     version: "v4.6.0",
     date: "Dzisiaj, 05.09.2026",
-    badge: "NAJNOWSZA (v4.6.0)",
-    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    badge: "POPRZEDNIA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Utworzono oficjalny plik README.md dokumentujący wersję strony i bota oraz pełną historię wydań",
       "Wdrożono zasadę wersjonowania: każda modyfikacja i aktualizacja strony podbija wersję i aktualizuje changelog",
