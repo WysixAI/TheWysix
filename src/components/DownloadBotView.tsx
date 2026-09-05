@@ -12,10 +12,22 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
+    version: "v3.2.0",
+    date: "Dzisiaj, 05.09.2026",
+    badge: "NAJNOWSZA (v3.2.0)",
+    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Wyeliminowano błąd 500 FUNCTION_INVOCATION_FAILED na Vercel spowodowany wywołaniem app.listen() i importem vite w środowisku bezserwerowym",
+      "Wprowadzono pełną separację architektury aplikacji: czysty moduł Express (src/serverApp.ts) oraz odrębny dedykowany punkt Serverless (src/apiEntry.ts)",
+      "Wykluczono pakiet deweloperski Vite oraz nasłuchiwanie portu 3000 z bundla bezserwerowego Vercel (/api/index.js)",
+      "Dodano automatyczną obsługę parametrów autoryzacji OAuth bezpośrednio w głównym handlerze /api"
+    ]
+  },
+  {
     version: "v3.1.0",
     date: "Dzisiaj, 05.09.2026",
-    badge: "NAJNOWSZA (v3.1.0)",
-    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    badge: "STABILNA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Wyeliminowano błąd 'Cannot find module /var/task/server' poprzez wygenerowanie samowystarczalnego bundla ESM w /api/index.js",
       "Scentralizowano obsługę Serverless Functions do pojedynczego punktu wejścia /api i usunięto problematyczne podkatalogi /api/auth",
