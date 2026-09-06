@@ -12,10 +12,25 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
-    version: "v5.9.0",
+    version: "v6.0.0",
     date: "Dzisiaj, 06.09.2026",
-    badge: "NAJNOWSZA (v5.9.0)",
+    badge: "NAJNOWSZA (v6.0.0)",
     badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Wizualna renowacja interfejsu w oparciu o najnowszy design BotGhost Studio (Hub, Toolbox, Node Canvas)",
+      "Wdrożono główny panel BotGhost Hub z podziałem na Custom Commands, Custom Events, Embed Messages oraz bannerem Premium",
+      "Zaprojektowano nowoczesny przybornik klocków (Action Toolbox) z pionowym dokiem ikon kategorii (Wiadomości, Akcje, Role, Logika) oraz funkcją Drag & Drop",
+      "Dodano dedykowane węzły Command Trigger z żółtą plakietką młotka [🔨] oraz Error Handler z czerwoną plakietką ostrzegawczą [⚠️]",
+      "Nowe zaokrąglone karty węzłów w ciemnej estetyce BotGhost z precyzyjnymi portami połączeń (okrągłe piny #5865F2)",
+      "Pływający pasek narzędzi płótna (Bottom-Left Toolbar) z przyciskiem dopasowania do ekranu [⛶], powiększeniem Zoom oraz Auto-Layout",
+      "Podbito wersję bota i manifest package.json do v6.0.0 z pełnym wsparciem nowego schematu przepływów"
+    ]
+  },
+  {
+    version: "v5.9.0",
+    date: "06.09.2026",
+    badge: "POPRZEDNIA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Wdrożono interaktywną swobodną planszę węzłów (Visual Node Graph Canvas) z dowolnym rozmieszczaniem klocków na płótnie 2D",
       "Przeciąganie klocków bezpośrednio z przybornika (Drag & Drop) i upuszczanie w wybranym miejscu planszy z automatycznym przeliczaniem współrzędnych",

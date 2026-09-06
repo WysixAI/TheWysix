@@ -323,6 +323,7 @@ export interface ActionFlow {
   enabled: boolean;
   trigger: ActionTriggerConfig;
   triggerPosition?: { x: number; y: number };
+  errorHandlerPosition?: { x: number; y: number };
   steps: ActionStep[];
   connections?: ActionConnection[];
   updatedAt?: string;

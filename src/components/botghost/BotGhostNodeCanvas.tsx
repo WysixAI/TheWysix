@@ -18,7 +18,9 @@ import {
   Sliders,
   Play,
   Layers,
-  ArrowDown
+  ArrowDown,
+  Hammer,
+  AlertTriangle
 } from 'lucide-react';
 import {
   ActionFlow,
@@ -80,7 +82,8 @@ export function BotGhostNodeCanvas({
   const [hoveredPort, setHoveredPort] = useState<{ nodeId: string; portType: 'in' } | null>(null);
 
   // Węzły z pozycjami domyślnymi
-  const triggerPos = flow.triggerPosition || { x: 380, y: 50 };
+  const triggerPos = flow.triggerPosition || { x: 420, y: 60 };
+  const errorHandlerPos = flow.errorHandlerPosition || { x: 50, y: 60 };
 
   // Domyślne rozmieszczenie kroków, jeśli nie mają x, y
   const getStepPosition = useCallback(
@@ -192,6 +195,9 @@ export function BotGhostNodeCanvas({
     if (nodeId === 'trigger') {
       initX = triggerPos.x;
       initY = triggerPos.y;
+    } else if (nodeId === 'error_handler') {
+      initX = errorHandlerPos.x;
+      initY = errorHandlerPos.y;
     } else {
       const s = flow.steps.find((st) => st.id === nodeId);
       if (s) {
@@ -239,6 +245,11 @@ export function BotGhostNodeCanvas({
         onUpdateFlow((prev) => ({
           ...prev,
           triggerPosition: { x: newX, y: newY }
+        }));
+      } else if (draggingNode.nodeId === 'error_handler') {
+        onUpdateFlow((prev) => ({
+          ...prev,
+          errorHandlerPosition: { x: newX, y: newY }
         }));
       } else {
         onUpdateFlow((prev) => ({
@@ -328,9 +339,20 @@ export function BotGhostNodeCanvas({
         x: triggerPos.x,
         y: triggerPos.y,
         width: NODE_WIDTH,
-        height: 200,
+        height: 180,
         outputPortX: triggerPos.x + NODE_WIDTH / 2,
-        outputPortY: triggerPos.y + 200
+        outputPortY: triggerPos.y + 180
+      };
+    }
+
+    if (nodeId === 'error_handler') {
+      return {
+        x: errorHandlerPos.x,
+        y: errorHandlerPos.y,
+        width: NODE_WIDTH,
+        height: 130,
+        outputPortX: errorHandlerPos.x + NODE_WIDTH / 2,
+        outputPortY: errorHandlerPos.y + 130
       };
     }
 
@@ -390,44 +412,50 @@ export function BotGhostNodeCanvas({
         backgroundPosition: `${pan.x}px ${pan.y}px`
       }}
     >
-      {/* 1. KONTROLKI PŁÓTNA (ZOOM, AUTO-LAYOUT, POMOC) */}
-      <div className="absolute top-4 right-4 z-40 flex items-center gap-2 bg-[#181920]/90 backdrop-blur-md p-1.5 rounded-2xl border border-[#2d2e38] shadow-2xl">
+      {/* 1. PŁYWAJĄCY PASEK NARZĘDZI WIDOKU (BOTTOM-LEFT JAK NA OBRAZKU 2) */}
+      <div className="absolute bottom-5 left-5 z-40 flex items-center gap-2 select-none">
+        {/* Przycisk Fit View / Wycentruj [⛶] */}
         <button
-          onClick={() => setZoom((z) => Math.min(z + 0.15, 1.8))}
-          title="Przybliż (Zoom In)"
-          className="p-2 rounded-xl bg-[#23242e] hover:bg-[#2e2f3d] text-neutral-300 hover:text-white transition-colors cursor-pointer"
+          onClick={() => {
+            setPan({ x: 200, y: 80 });
+            setZoom(1);
+          }}
+          title="Dopasuj widok do ekranu (Fit to screen)"
+          className="w-10 h-10 rounded-xl bg-[#1e1f28] hover:bg-[#282936] text-neutral-300 hover:text-white border border-[#2f313f] flex items-center justify-center shadow-2xl cursor-pointer transition-all active:scale-95"
         >
-          <ZoomIn className="w-4 h-4" />
+          <Maximize2 className="w-4 h-4" />
         </button>
-        <span className="text-xs font-mono font-bold text-neutral-400 px-1 w-12 text-center">
-          {Math.round(zoom * 100)}%
-        </span>
-        <button
-          onClick={() => setZoom((z) => Math.max(z - 0.15, 0.4))}
-          title="Oddal (Zoom Out)"
-          className="p-2 rounded-xl bg-[#23242e] hover:bg-[#2e2f3d] text-neutral-300 hover:text-white transition-colors cursor-pointer"
-        >
-          <ZoomOut className="w-4 h-4" />
-        </button>
-        <div className="w-px h-5 bg-[#31323f]" />
+
+        {/* Kontrolki Zoom: Minus, Procent, Plus */}
+        <div className="flex items-center bg-[#1e1f28] border border-[#2f313f] rounded-xl overflow-hidden shadow-2xl">
+          <button
+            onClick={() => setZoom((z) => Math.max(0.4, Number((z - 0.1).toFixed(2))))}
+            title="Oddal (Zoom Out)"
+            className="w-9 h-10 flex items-center justify-center hover:bg-white/5 text-neutral-300 hover:text-white transition-colors cursor-pointer"
+          >
+            <ZoomOut className="w-4 h-4" />
+          </button>
+          <span className="text-xs font-mono font-bold text-neutral-300 px-2 min-w-12 text-center">
+            {Math.round(zoom * 100)}%
+          </span>
+          <button
+            onClick={() => setZoom((z) => Math.min(2.0, Number((z + 0.1).toFixed(2))))}
+            title="Przybliż (Zoom In)"
+            className="w-9 h-10 flex items-center justify-center hover:bg-white/5 text-neutral-300 hover:text-white transition-colors cursor-pointer"
+          >
+            <ZoomIn className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Auto Layout */}
         <button
           onClick={handleAutoLayout}
-          title="Uporządkuj klocki w pionowe drzewo"
-          className="px-3 py-1.5 rounded-xl bg-[#5865F2]/20 hover:bg-[#5865F2]/30 text-[#8590ff] text-xs font-bold transition-all flex items-center gap-1.5 border border-[#5865F2]/40 cursor-pointer"
+          title="Automatycznie uporządkuj klocki w pionowe drzewo"
+          className="h-10 px-3.5 rounded-xl bg-[#1e1f28] hover:bg-[#282936] text-neutral-300 hover:text-white border border-[#2f313f] text-xs font-bold transition-all flex items-center gap-2 shadow-2xl cursor-pointer active:scale-95"
         >
-          <RotateCcw className="w-3.5 h-3.5" />
-          <span>Uporządkuj</span>
+          <RotateCcw className="w-3.5 h-3.5 text-[#8590ff]" />
+          <span>Auto Layout</span>
         </button>
-      </div>
-
-      {/* 2. ETYKIETA PODPOWIEDZI NA PŁÓTNIE */}
-      <div className="absolute bottom-4 left-4 z-30 pointer-events-none bg-[#181920]/85 backdrop-blur-md px-4 py-2.5 rounded-xl border border-[#2d2e38] text-[11px] text-neutral-400 shadow-xl space-y-0.5">
-        <div className="font-bold text-white flex items-center gap-1.5">
-          <Move className="w-3.5 h-3.5 text-[#5865F2]" />
-          <span>Swobodne Płótno BotGhost (Drag & Connect)</span>
-        </div>
-        <div>• Przeciągaj klocki z lewego paska i upuszczaj w dowolnym miejscu.</div>
-        <div>• Klikaj okrągłe piny (●) u dołu klocków, aby łączyć je kablami z kolejnymi akcjami.</div>
       </div>
 
       {/* 3. WARSTWA TRANSFORMOWANA WSPÓŁRZĘDNYMI PAN & ZOOM */}
@@ -566,38 +594,54 @@ export function BotGhostNodeCanvas({
         </svg>
 
         {/* =============================================================== */}
-        {/* 1. WĘZEŁ WYZWALACZA (TRIGGER NODE NA PLANSZY)                    */}
+        {/* 1. WĘZEŁ WYZWALACZA (COMMAND TRIGGER NODE Z OBRAZKA 2)          */}
         {/* =============================================================== */}
         <div
           style={{
             transform: `translate(${triggerPos.x}px, ${triggerPos.y}px)`,
             width: '340px'
           }}
-          className="absolute z-20 rounded-2xl bg-[#1e1f26] border-2 border-amber-500/70 shadow-2xl overflow-visible select-none"
+          className="absolute z-20 rounded-2xl bg-[#1d1e26] border border-[#2d2f3b] shadow-2xl overflow-visible select-none transition-shadow hover:border-amber-500/50"
         >
-          {/* Uchwyt przeciągania nagłówka */}
+          {/* Górny port (Circle port dekoracyjny) */}
+          <div className="relative w-full flex justify-center">
+            <div className="absolute -top-2.5 w-5 h-5 rounded-full border-2 border-[#121318] bg-[#252632] flex items-center justify-center shadow-md">
+              <div className="w-1.5 h-1.5 rounded-full bg-neutral-400" />
+            </div>
+          </div>
+
+          {/* Uchwyt przeciągania nagłówka z żółtym młotkiem BotGhost */}
           <div
             onMouseDown={(e) => handleNodeMouseDown(e, 'trigger')}
-            className="px-4 py-2.5 bg-gradient-to-r from-amber-600 to-amber-500 text-white flex items-center justify-between rounded-t-2xl cursor-grab active:cursor-grabbing shadow-md"
+            className="p-4 cursor-grab active:cursor-grabbing flex items-start gap-3 border-b border-[#262733]"
           >
-            <div className="flex items-center gap-2">
-              <Zap className="w-4 h-4 fill-white text-white" />
-              <span className="text-xs font-black tracking-wide uppercase">Wyzwalacz (Trigger)</span>
+            <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center text-[#14151a] shrink-0 shadow-md shadow-amber-950/40">
+              <Hammer className="w-5 h-5 stroke-[2.5]" />
             </div>
 
-            <button
-              onClick={onOpenTriggerModal}
-              className="px-2 py-0.5 rounded bg-black/30 hover:bg-black/50 text-[10px] font-bold text-white transition-all cursor-pointer"
-            >
-              Zmień
-            </button>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between">
+                <span className="text-base font-black text-white tracking-tight">
+                  /{flow.trigger.commandName || 'komenda'}
+                </span>
+                <button
+                  onClick={onOpenTriggerModal}
+                  className="text-[10px] text-amber-400 font-bold hover:underline cursor-pointer"
+                >
+                  Edytuj
+                </button>
+              </div>
+              <p className="text-[11px] text-neutral-400 mt-1 leading-relaxed">
+                Drag and drop different options, actions and conditions to add them to your command. Connect the corresponding colors to create your command flow.
+              </p>
+            </div>
           </div>
 
           {/* Ciało klocka wyzwalacza */}
-          <div className="p-3.5 space-y-2.5 bg-[#181920] text-xs">
+          <div className="p-3.5 space-y-2 bg-[#16171f] text-xs rounded-b-2xl">
             {flow.trigger.type === 'command' && (
               <div>
-                <label className="block text-[10px] font-bold text-amber-300 uppercase mb-1">
+                <label className="block text-[10px] font-bold text-neutral-400 uppercase mb-1">
                   Komenda Slash
                 </label>
                 <div className="relative">
@@ -617,39 +661,71 @@ export function BotGhostNodeCanvas({
                       }))
                     }
                     placeholder="np. pomoc"
-                    className="w-full pl-6 pr-2 py-1.5 bg-[#121318] border border-[#31323f] rounded-lg text-xs text-white font-mono focus:outline-none focus:border-amber-500"
+                    className="w-full pl-6 pr-2 py-1.5 bg-[#101116] border border-[#2b2c37] rounded-lg text-xs text-white font-mono focus:outline-none focus:border-amber-500"
                   />
                 </div>
               </div>
             )}
-
-            <div>
-              <label className="block text-[10px] font-bold text-neutral-400 uppercase mb-1">
-                Opis w menu
-              </label>
-              <input
-                type="text"
-                value={flow.trigger.commandDescription || ''}
-                onChange={(e) =>
-                  onUpdateFlow((prev) => ({
-                    ...prev,
-                    trigger: { ...prev.trigger, commandDescription: e.target.value }
-                  }))
-                }
-                placeholder="Opis komendy bota..."
-                className="w-full px-2 py-1.5 bg-[#121318] border border-[#31323f] rounded-lg text-xs text-white focus:outline-none focus:border-amber-500"
-              />
-            </div>
           </div>
 
           {/* PORT WYJŚCIOWY (OUTPUT SOCKET) U DOŁU WĘZŁA */}
           <div className="relative w-full flex justify-center">
             <button
-              onMouseDown={(e) => startConnecting(e, 'trigger', 'default', triggerPos.x + 170, triggerPos.y + 200)}
+              onMouseDown={(e) => startConnecting(e, 'trigger', 'default', triggerPos.x + 170, triggerPos.y + 180)}
               title="Przeciągnij kabel do kolejnego klocka"
-              className="absolute -bottom-3.5 w-7 h-7 rounded-full bg-amber-500 hover:bg-amber-400 border-2 border-[#121318] shadow-lg flex items-center justify-center cursor-pointer transition-all hover:scale-125 z-30 group"
+              className="absolute -bottom-3.5 w-6 h-6 rounded-full bg-[#5865F2] hover:bg-[#8590ff] border-2 border-[#121318] shadow-lg flex items-center justify-center cursor-pointer transition-all hover:scale-125 z-30"
             >
-              <ArrowDown className="w-3.5 h-3.5 text-[#121318] stroke-[3]" />
+              <div className="w-1.5 h-1.5 rounded-full bg-white" />
+            </button>
+          </div>
+        </div>
+
+        {/* =============================================================== */}
+        {/* 1.5. WĘZEŁ ERROR HANDLER (Z OBRAZKA 2)                           */}
+        {/* =============================================================== */}
+        <div
+          style={{
+            transform: `translate(${errorHandlerPos.x}px, ${errorHandlerPos.y}px)`,
+            width: '340px'
+          }}
+          className="absolute z-20 rounded-2xl bg-[#1d1e26] border border-[#2d2f3b] shadow-2xl overflow-visible select-none transition-shadow hover:border-red-500/50"
+        >
+          {/* Górny port dekoracyjny */}
+          <div className="relative w-full flex justify-center">
+            <div className="absolute -top-2.5 w-5 h-5 rounded-full border-2 border-[#121318] bg-[#252632] flex items-center justify-center shadow-md">
+              <div className="w-1.5 h-1.5 rounded-full bg-neutral-400" />
+            </div>
+          </div>
+
+          {/* Uchwyt przeciągania nagłówka z czerwonym trójkątem */}
+          <div
+            onMouseDown={(e) => handleNodeMouseDown(e, 'error_handler')}
+            className="p-4 cursor-grab active:cursor-grabbing flex items-start gap-3 rounded-2xl"
+          >
+            <div className="w-10 h-10 rounded-xl bg-red-500 flex items-center justify-center text-white shrink-0 shadow-md shadow-red-950/40">
+              <AlertTriangle className="w-5 h-5 stroke-[2.5]" />
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <h4 className="text-base font-black text-white tracking-tight">
+                Error Handler
+              </h4>
+              <p className="text-[11px] text-neutral-400 mt-1 leading-relaxed">
+                Handle errors that occur during the command execution
+              </p>
+            </div>
+          </div>
+
+          {/* PORT WYJŚCIOWY U DOŁU ERROR HANDLERA */}
+          <div className="relative w-full flex justify-center">
+            <button
+              onMouseDown={(e) =>
+                startConnecting(e, 'error_handler', 'default', errorHandlerPos.x + 170, errorHandlerPos.y + 130)
+              }
+              title="Przeciągnij kabel obsługi błędu (np. do Embed Reply)"
+              className="absolute -bottom-3.5 w-6 h-6 rounded-full bg-[#5865F2] hover:bg-[#8590ff] border-2 border-[#121318] shadow-lg flex items-center justify-center cursor-pointer transition-all hover:scale-125 z-30"
+            >
+              <div className="w-1.5 h-1.5 rounded-full bg-white" />
             </button>
           </div>
         </div>
@@ -669,7 +745,7 @@ export function BotGhostNodeCanvas({
                 transform: `translate(${pos.x}px, ${pos.y}px)`,
                 width: '340px'
               }}
-              className={`absolute z-20 rounded-2xl bg-[#1e1f26] border-2 shadow-2xl overflow-visible select-none transition-shadow ${blockDef.borderColor}`}
+              className="absolute z-20 rounded-2xl bg-[#1d1e26] border border-[#2d2f3b] shadow-2xl overflow-visible select-none transition-shadow hover:border-[#5865F2]/50"
             >
               {/* PORT WEJŚCIOWY (INPUT SOCKET) U GÓRY WĘZŁA */}
               <div className="relative w-full flex justify-center">
@@ -690,16 +766,18 @@ export function BotGhostNodeCanvas({
               {/* BELKA NAGŁÓWKA KLOCKA (UCHWYT DO PRZECIĄGANIA) */}
               <div
                 onMouseDown={(e) => handleNodeMouseDown(e, step.id)}
-                className={`px-3.5 py-2.5 flex items-center justify-between rounded-t-2xl cursor-grab active:cursor-grabbing border-b ${blockDef.bgColor} ${blockDef.borderColor}`}
+                className="p-4 flex items-start justify-between rounded-t-2xl cursor-grab active:cursor-grabbing border-b border-[#262733] gap-3"
               >
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className={`p-1.5 rounded-lg bg-black/40 ${blockDef.color} shrink-0`}>
-                    <StepIcon className="w-3.5 h-3.5" />
+                <div className="flex items-start gap-3 min-w-0 flex-1">
+                  <div className="w-10 h-10 rounded-xl bg-[#5865F2] flex items-center justify-center text-white shrink-0 shadow-md shadow-indigo-950/40">
+                    <StepIcon className="w-5 h-5" />
                   </div>
-                  <div className="min-w-0">
-                    <div className="text-xs font-black text-white truncate">{blockDef.title}</div>
-                    <div className="text-[9px] font-bold text-neutral-400 uppercase truncate">
-                      #{index + 1} {blockDef.badge}
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-black text-white truncate">
+                      {step.type === 'send_embed' ? 'Embed Reply' : blockDef.title}
+                    </div>
+                    <div className="text-[11px] text-neutral-400 mt-0.5 line-clamp-2">
+                      {step.type === 'send_embed' ? 'Bot replies with an embed response' : blockDef.desc}
                     </div>
                   </div>
                 </div>
@@ -713,7 +791,7 @@ export function BotGhostNodeCanvas({
                       }))
                     }
                     title={step.collapsed ? 'Rozwiń klocek' : 'Zwiń klocek'}
-                    className="p-1 rounded text-neutral-400 hover:text-white hover:bg-black/20"
+                    className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/5 cursor-pointer"
                   >
                     {step.collapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
                   </button>
@@ -728,7 +806,7 @@ export function BotGhostNodeCanvas({
                       }));
                     }}
                     title="Usuń klocek"
-                    className="p-1 rounded text-neutral-400 hover:text-rose-400 hover:bg-black/20"
+                    className="p-1.5 rounded-lg text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10 cursor-pointer"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -737,7 +815,7 @@ export function BotGhostNodeCanvas({
 
               {/* ZAWARTOŚĆ KLOCKA AKCJI (ROZWINIĘTE POLA EDYCJI) */}
               {!step.collapsed && (
-                <div className="p-3.5 space-y-2.5 bg-[#181920] text-xs">
+                <div className="p-3.5 space-y-2.5 bg-[#16171f] text-xs">
                   {/* Wiadomość / Ephemeral / DM */}
                   {(step.type === 'send_message' || step.type === 'send_ephemeral' || step.type === 'send_dm') && (
                     <div>

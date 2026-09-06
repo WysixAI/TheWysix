@@ -11,8 +11,8 @@ export function generateBotZip(
   // 1. package.json
   const packageJson = {
     name: "kitek-bot",
-    version: "5.9.0",
-    description: "KitekBot Discord Bot v5.9.0 — zaawansowany kreator komend w stylu BotGhost z planszą węzłów 2D (Node Graph) i kablami łączącymi",
+    version: "6.0.0",
+    description: "KitekBot Discord Bot v6.0.0 — renowacja interfejsu BotGhost Studio, Hub modułów, nowy przybornik klocków oraz węzły Command & Error Handler",
     main: "index.js",
     scripts: {
       prestart: "npm install --no-audit --prefer-offline",
@@ -28,7 +28,7 @@ export function generateBotZip(
     devDependencies: {
       "nodemon": "^3.1.7"
     },
-    keywords: ["discord", "bot", "kitekbot", "botghost", "node-graph", "canvas", "block-logic", "commands", "v5.9.0"],
+    keywords: ["discord", "bot", "kitekbot", "botghost", "node-graph", "canvas", "block-logic", "commands", "v6.0.0"],
     author: "KitekBot Team",
     license: "ISC"
   };
