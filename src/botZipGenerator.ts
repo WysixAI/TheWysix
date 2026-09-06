@@ -11,8 +11,8 @@ export function generateBotZip(
   // 1. package.json
   const packageJson = {
     name: "kitek-bot",
-    version: "5.7.0",
-    description: "KitekBot Discord Bot v5.7.0 — kreator komend w stylu BotGhost i Scratch (Visual Block Logic Builder) z bogatym zestawem wyzwalaczy i akcji",
+    version: "5.8.0",
+    description: "KitekBot Discord Bot v5.8.0 — zaawansowany kreator komend w stylu BotGhost Builder z rozgałęzieniami IF/ELSE i symulatorem",
     main: "index.js",
     scripts: {
       prestart: "npm install --no-audit --prefer-offline",
@@ -28,7 +28,7 @@ export function generateBotZip(
     devDependencies: {
       "nodemon": "^3.1.7"
     },
-    keywords: ["discord", "bot", "kitekbot", "botghost", "scratch", "block-logic", "commands", "v5.7.0"],
+    keywords: ["discord", "bot", "kitekbot", "botghost", "builder", "block-logic", "commands", "v5.8.0"],
     author: "KitekBot Team",
     license: "ISC"
   };
@@ -635,7 +635,7 @@ export function generateBotZip(
     "client.once('ready', async (c) => {",
     "  const botUser = c ? c.user : client.user;",
     "  console.log('\\n=======================================================');",
-    "  console.log('✅ KitekBot v5.7.0 jest ONLINE jako: ' + botUser.tag + ' (ID: ' + botUser.id + ')');",
+    "  console.log('✅ KitekBot v5.8.0 jest ONLINE jako: ' + botUser.tag + ' (ID: ' + botUser.id + ')');",
     "  ",
     "  try {",
     "    await client.guilds.fetch();",
@@ -647,7 +647,7 @@ export function generateBotZip(
     "  });",
     "  console.log('=======================================================\\n');",
     "",
-    "  botUser.setActivity('Dashboard v5.7.0 | BotGhost Scratch Builder', { type: ActivityType.Playing });",
+    "  botUser.setActivity('Dashboard v5.8.0 | BotGhost Builder', { type: ActivityType.Playing });",
     "",
     "  const rawToken = (process.env.DISCORD_TOKEN || '').replace(/[\"']/g, '').replace(/^Bot\\s+/i, '').trim();",
     "  const clientId = (process.env.DISCORD_CLIENT_ID || '1368350667634376785').trim();",

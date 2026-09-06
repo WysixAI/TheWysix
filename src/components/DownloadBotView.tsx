@@ -12,10 +12,26 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
+    version: "v5.8.0",
+    date: "Dzisiaj, 06.09.2026",
+    badge: "NAJNOWSZA (v5.8.0)",
+    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Wdrożono zaawansowany kreator komend w standardzie dashboard.botghost.com/dashboard/builder (BotGhost Visual Studio)",
+      "Nowy lewy pasek przybornika (Action Block Toolbox) z podziałem na kategorie (Logika, Treść, Role, Moderacja, Kanały), wyszukiwarką i szybkim dodawaniem",
+      "Płótno w stylu BotGhost Studio z ciemnym tłem w siatkę kropek (dot-matrix) oraz pionowymi łącznikami ze zintegrowanymi przyciskami wstawiania (+)",
+      "Prawdziwe rozgałęzienie logiczne bloków IF (Warunek) z osobnymi gałęziami THEN (Gdy prawda) oraz ELSE (W przeciwnym razie)",
+      "Podgląd kart Embed na żywo w czasie rzeczywistym z wiernym odwzorowaniem stylu Discord (kolorowy pasek boczny, formatowanie, autor, stopka)",
+      "Zintegrowany symulator czatu Discord (Live Discord Simulator Modal) z testowaniem odpowiedzi bota, wiadomości Ephemeral oraz logów wykonania",
+      "Szybki panel zmiennych Discord {x} (BotGhost Tags: {user}, {server.name}, {channel}, {args}) z kopiowaniem jednym kliknięciem",
+      "Zaktualizowano paczkę bota, silnik akcji oraz manifest package.json do wersji v5.8.0"
+    ]
+  },
+  {
     version: "v5.7.0",
     date: "Dzisiaj, 06.09.2026",
-    badge: "NAJNOWSZA (v5.7.0)",
-    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    badge: "POPRZEDNIA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Wdrożono zaawansowany kreator komend w stylu BotGhost i Scratch (Visual Block Logic Builder)",
       "Kafelki komend z natychmiastowym przejściem do edytora Scratch po kliknięciu karty lub przycisku '+ Utwórz komendę'",
