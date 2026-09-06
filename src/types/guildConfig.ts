@@ -201,59 +201,106 @@ export type WelcomeConfig = MessageBuilderConfig;
 export type GoodbyeConfig = MessageBuilderConfig;
 
 export type ActionTriggerType =
-  | 'command'           // Komenda slash lub z prefiksem (np. !pomoc, !ranga)
-  | 'message_sent'      // Wysłanie wiadomości na kanale
-  | 'member_join'       // Dołączenie użytkownika do serwera
-  | 'member_leave'      // Opuszczenie serwera przez użytkownika
+  | 'command'           // Komenda slash lub z prefiksem (np. !pomoc, !ranga, /zweryfikuj)
+  | 'message_sent'      // Wysłanie wiadomości na kanale (zawiera tekst, zaczyna się od)
+  | 'member_join'       // Dołączenie użytkownika do serwera (Join event)
+  | 'member_leave'      // Opuszczenie serwera przez użytkownika (Leave event)
+  | 'button_click'      // Kliknięcie w przycisk bota
+  | 'select_menu'       // Wybór z menu rozwijanego
   | 'reaction_add'      // Dodanie reakcji do wiadomości
-  | 'button_click';     // Kliknięcie w przycisk / interakcja
+  | 'schedule';         // Harmonogram czasowy (Interval / cron)
 
 export interface ActionTriggerConfig {
   type: ActionTriggerType;
   commandName?: string;
   commandDescription?: string;
+  slashOnly?: boolean;
+  prefixOnly?: boolean;
   channelScope: 'all' | 'specific';
   channelId?: string;
   channelName?: string;
-  messageMatchType?: 'contains' | 'exact' | 'starts_with' | 'any';
+  messageMatchType?: 'contains' | 'exact' | 'starts_with' | 'regex' | 'any';
   messageContent?: string;
   ignoreBots?: boolean;
   roleScope?: 'everyone' | 'admin_only' | 'specific_role';
   allowedRoleId?: string;
+  buttonCustomId?: string;
+  reactionEmoji?: string;
+  scheduleIntervalMinutes?: number;
 }
 
+export type ActionStepCategory = 'logic' | 'message' | 'member' | 'moderation' | 'channel';
+
 export type ActionStepType =
+  // Logika & Kontrola (Scratch Control / Logic)
+  | 'condition_if'      // Warunek IF (rola, uprawnienia, kanał, szansa %)
   | 'wait'              // Czekaj określony czas (np. 5s)
+  | 'cooldown'          // Ograniczenie czasowe / cooldown na użytkownika
+  | 'stop_flow'         // Zatrzymaj wykonywanie komendy
+  | 'random_choice'     // Losowy wybór z puli
+  // Wiadomości & Treści
   | 'send_message'      // Wyślij wiadomość na kanał
+  | 'send_embed'        // Wyślij sformatowany Embed
   | 'send_ephemeral'    // Dyskretna odpowiedź (widoczna tylko dla klikającego)
   | 'send_dm'           // Wiadomość prywatna do użytkownika
+  | 'add_reaction'      // Dodaj reakcję emoji do wiadomości
+  | 'delete_message'    // Usuń wiadomość wywołującą
+  | 'purge_messages'    // Wyczyść ostatnie N wiadomości
+  // Użytkownicy & Role
   | 'give_role'         // Nadaj rolę
   | 'remove_role'       // Odbierz rolę
-  | 'kick_member'       // Wyrzuć użytkownika
-  | 'ban_member'        // Zbanuj użytkownika
-  | 'delete_message'    // Usuń wiadomość wywołującą
-  | 'send_embed'        // Wyślij sformatowany Embed
-  | 'random_message'    // Wybierz 1 z kilku wariantów
-  | 'change_nickname';  // Zmień nick użytkownika
+  | 'change_nickname'   // Zmień nick użytkownika
+  | 'timeout_member'    // Wycisz użytkownika (Timeout)
+  | 'kick_member'       // Wyrzuć użytkownika (Kick)
+  | 'ban_member'        // Zbanuj użytkownika (Ban)
+  // Kanały & Tickety
+  | 'create_channel'    // Utwórz nowy kanał tekstowy
+  | 'delete_channel'    // Usuń wybrany kanał
+  | 'create_ticket'     // Utwórz dedykowany pokój zgłoszenia
+  // Zgodność wsteczna
+  | 'random_message';
 
 export interface ActionStep {
   id: string;
   type: ActionStepType;
+  title?: string;
+  collapsed?: boolean;
+  // Timing & Cooldown
   durationSeconds?: number;
+  cooldownSeconds?: number;
+  // Messages & Embeds
   messageText?: string;
-  targetChannel?: 'same' | 'specific';
+  targetChannel?: 'same' | 'specific' | 'dm';
   channelId?: string;
-  roleName?: string;
-  roleId?: string;
-  reason?: string;
-  deleteMessageDays?: number;
+  channelName?: string;
+  replyToMessage?: boolean;
   embedTitle?: string;
   embedDescription?: string;
   embedColor?: string;
   embedImageUrl?: string;
+  embedThumbnailUrl?: string;
   embedFooter?: string;
-  randomOptions?: string[];
+  includeTimestamp?: boolean;
+  emoji?: string;
+  purgeCount?: number;
+  // Roles & Members
+  roleName?: string;
+  roleId?: string;
+  reason?: string;
+  deleteMessageDays?: number;
   newNickname?: string;
+  timeoutMinutes?: number;
+  // Logic & Conditions
+  conditionType?: 'has_role' | 'has_permission' | 'is_channel' | 'message_contains' | 'random_chance';
+  conditionValue?: string;
+  chancePercent?: number;
+  thenSteps?: ActionStep[];
+  elseSteps?: ActionStep[];
+  // Channel creation
+  newChannelName?: string;
+  categoryName?: string;
+  // Legacy
+  randomOptions?: string[];
 }
 
 export interface ActionFlow {
@@ -263,6 +310,7 @@ export interface ActionFlow {
   enabled: boolean;
   trigger: ActionTriggerConfig;
   steps: ActionStep[];
+  updatedAt?: string;
 }
 
 export type TicketComponentType = 'buttons' | 'select_menu' | 'both';

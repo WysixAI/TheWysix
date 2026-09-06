@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { LogIn, LogOut, Plus, ShieldCheck, Crown, ExternalLink, RefreshCw, Loader2, Server, FolderArchive, Settings, CheckCircle2, Sliders, Bot, Radio, Wifi, WifiOff, Copy, Check, AlertCircle, Sparkles, X, Zap, Ticket } from 'lucide-react';
+import { LogIn, LogOut, Plus, ShieldCheck, Crown, ExternalLink, RefreshCw, Loader2, Server, FolderArchive, Settings, CheckCircle2, Sliders, Bot, Radio, Wifi, WifiOff, Copy, Check, AlertCircle, Sparkles, X, Zap, Ticket, Terminal } from 'lucide-react';
 import { GuildSettingsModal } from './components/GuildSettingsModal';
 import { DownloadBotView } from './components/DownloadBotView';
 import { BotApiConnectionModal } from './components/BotApiConnectionModal';
 import { MessageStyleBuilder } from './components/MessageStyleBuilder';
 import { TicketBuilder } from './components/TicketBuilder';
+import { ActionsBuilder } from './components/ActionsBuilder';
 
 interface DiscordGuild {
   id: string;
@@ -68,7 +69,7 @@ export default function App() {
     try {
       localStorage.setItem('kitek_active_guild', JSON.stringify(guild));
     } catch {}
-    navigateTo('/tickets');
+    navigateTo('/commands');
   };
 
   const handleAddManualServer = () => {
@@ -694,8 +695,9 @@ export default function App() {
 
   const isDownload = currentPath === '/download' || currentPath === '/pobierz';
   const isLogin = currentPath === '/login';
-  const isTickets = (currentPath === '/tickets' || currentPath.startsWith('/tickets') || currentPath === '/ticket' || currentPath === '/actions' || currentPath.startsWith('/actions') || currentPath === '/welcome' || currentPath === '/goodbye') && Boolean(activeGuild);
-  const isDashboard = (currentPath === '/dashboard' || (!isDownload && !isLogin && !isTickets)) && Boolean(user);
+  const isCommands = (currentPath === '/commands' || currentPath === '/actions' || currentPath.startsWith('/commands') || currentPath.startsWith('/actions')) && Boolean(activeGuild);
+  const isTickets = (currentPath === '/tickets' || currentPath.startsWith('/tickets') || currentPath === '/ticket') && Boolean(activeGuild);
+  const isDashboard = (currentPath === '/dashboard' || (!isDownload && !isLogin && !isCommands && !isTickets)) && Boolean(user);
 
   const userGuildsCount = user?.guilds?.length || 0;
   const isGuildBotPresent = (guildId: string) => {
@@ -865,7 +867,29 @@ export default function App() {
                           </button>
                         </div>
 
-                        {/* Kategoria: Tickets (Components V2) */}
+                        {/* Kategoria 1: Komendy (Styl BotGhost & Scratch) */}
+                        <button
+                          id="category-commands-btn"
+                          onClick={() => navigateTo('/commands')}
+                          className={`w-full py-2.5 px-4 rounded-xl font-extrabold tracking-wide text-sm text-center uppercase transition-all duration-200 flex items-center justify-between cursor-pointer shadow-md ${
+                            isCommands
+                              ? 'bg-[#5865F2] text-white shadow-indigo-950/40 border border-[#7682f7]'
+                              : 'bg-[#272831] hover:bg-[#202128] text-neutral-300 hover:text-white border border-[#3b3c47]'
+                          }`}
+                          style={{ fontFamily: 'Montserrat, sans-serif' }}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <Terminal className={`w-4 h-4 shrink-0 ${isCommands ? 'text-amber-300' : 'text-[#5865F2]'}`} />
+                            <span>Komendy</span>
+                          </div>
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-black ${
+                            isCommands ? 'bg-black/30 text-white' : 'bg-[#5865F2]/20 text-[#8590ff]'
+                          }`}>
+                            BotGhost
+                          </span>
+                        </button>
+
+                        {/* Kategoria 2: Tickets (Components V2) */}
                         <button
                           id="category-tickets-btn"
                           onClick={() => navigateTo('/tickets')}
@@ -958,6 +982,14 @@ export default function App() {
           {isDownload ? (
             /* WIDOK: POBIERZ PLIKI BOTA */
             <DownloadBotView />
+          ) : isCommands && activeGuild ? (
+            /* WIDOK: WŁASNE KOMENDY & BLOKI SCRATCH (BOTGHOST) */
+            <div className="w-full flex-1 flex flex-col">
+              <ActionsBuilder
+                guild={activeGuild}
+                onBackToDashboard={handleGoToDashboard}
+              />
+            </div>
           ) : isTickets && activeGuild ? (
             /* WIDOK: KREATOR TICKETÓW (TICKET BUILDER COMPONENTS V2) */
             <div className="w-full flex-1 flex flex-col">

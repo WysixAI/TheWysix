@@ -12,10 +12,26 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
+    version: "v5.7.0",
+    date: "Dzisiaj, 06.09.2026",
+    badge: "NAJNOWSZA (v5.7.0)",
+    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Wdrożono zaawansowany kreator komend w stylu BotGhost i Scratch (Visual Block Logic Builder)",
+      "Kafelki komend z natychmiastowym przejściem do edytora Scratch po kliknięciu karty lub przycisku '+ Utwórz komendę'",
+      "Bogaty zestaw wyzwalaczy (Triggers): Komenda czatu / slash, Wysłanie wiadomości, Dołączenie użytkownika, Opuszczenie serwera, Kliknięcie przycisku, Reakcja",
+      "Kategorie bloków logicznych: Logika (Warunek Jeżeli/W Przeciwnym Razie, Opóźnienie Czekaj, Losowy Wybór, Cooldown), Wiadomości (Wyślij wiadomość, Karta Embed, Ephemeral, DM, Usuń), Członkowie (Nadaj/Odbierz rolę, Wycisz Timeout, Wyrzuć Kick, Zbanuj Ban), Kanały (Utwórz kanał / ticket, Zablokuj, Wyczyść)",
+      "Wizualny interfejs bloków z kolorowymi pinami, połączeniami pionowymi i hierarchią drzewa",
+      "Wbudowany symulator wykonania przepływu (Live Flow Simulator) z realistycznymi krokami i logami",
+      "Szybkie szablony komend (Quick Start): /pomoc z embedem, Auto-Role powitalna, Weryfikacja serwerowa",
+      "Zaktualizowano paczkę bota, silnik wykonawczy oraz plik package.json do wersji v5.7.0"
+    ]
+  },
+  {
     version: "v5.6.0",
     date: "Dzisiaj, 06.09.2026",
-    badge: "NAJNOWSZA (v5.6.0)",
-    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    badge: "POPRZEDNIA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Wdrożono pełną integrację modułu Ticket (Components V2) z panelem nawigacyjnym: natychmiastowe przejście do konfiguracji ticketów po kliknięciu 'Manage' na serwerze",
       "Dodano przycisk 'Dodaj bota na serwer' na Dashboardzie umożliwiający natychmiastowe zaproszenie bota na dowolny serwer Discord z uprawnieniami Administratora",
