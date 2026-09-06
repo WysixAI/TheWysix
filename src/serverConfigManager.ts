@@ -7,8 +7,10 @@ import {
   WelcomeConfig,
   GoodbyeConfig,
   GuildConfig,
+  ActionFlow,
   getDefaultWelcomeConfig,
   getDefaultGoodbyeConfig,
+  getDefaultActionsConfig,
 } from './types/guildConfig';
 
 export type {
@@ -18,8 +20,9 @@ export type {
   WelcomeConfig,
   GoodbyeConfig,
   GuildConfig,
+  ActionFlow,
 };
-export { getDefaultWelcomeConfig, getDefaultGoodbyeConfig };
+export { getDefaultWelcomeConfig, getDefaultGoodbyeConfig, getDefaultActionsConfig };
 
 const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
 const SERWERY_DIR = isServerless ? path.join('/tmp', 'Serwery') : path.join(process.cwd(), 'Serwery');
@@ -44,6 +47,7 @@ export function getDefaultConfig(guildId: string, guildName?: string): GuildConf
     language: 'pl',
     welcome: getDefaultWelcomeConfig(),
     goodbye: getDefaultGoodbyeConfig(),
+    actions: getDefaultActionsConfig(),
     embedColor: '#5865F2',
     updatedAt: new Date().toISOString(),
   };
@@ -96,12 +100,17 @@ export function getGuildConfig(guildId: string, guildName?: string): GuildConfig
           : defaultConf.goodbye.buttons,
       };
 
+      const mergedActions: ActionFlow[] = Array.isArray(parsed.actions)
+        ? parsed.actions
+        : defaultConf.actions || [];
+
       const full: GuildConfig = {
         ...defaultConf,
         ...parsed,
         guildId,
         welcome: mergedWelcome,
         goodbye: mergedGoodbye,
+        actions: mergedActions,
       };
       memoryConfigs.set(guildId, full);
       return full;

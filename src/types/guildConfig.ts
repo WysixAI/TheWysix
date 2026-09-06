@@ -84,11 +84,62 @@ export interface ComponentTextDisplay {
   content: string;
 }
 
+export interface ComponentFile {
+  id: string;
+  type: 'file';
+  fileName: string;
+  fileUrl: string;
+  fileSize?: string;
+  description?: string;
+  spoiler?: boolean;
+  hidden?: boolean;
+}
+
+export interface EmbedFieldItem {
+  id: string;
+  name: string;
+  value: string;
+  inline?: boolean;
+}
+
+export interface ComponentFields {
+  id: string;
+  type: 'fields';
+  fields: EmbedFieldItem[];
+  hidden?: boolean;
+}
+
+export interface ComponentQuote {
+  id: string;
+  type: 'quote';
+  content: string;
+  author?: string;
+  hidden?: boolean;
+}
+
+export interface ComponentCodeBlock {
+  id: string;
+  type: 'code_block';
+  code: string;
+  language?: string;
+  hidden?: boolean;
+}
+
+export interface ComponentTimestamp {
+  id: string;
+  type: 'timestamp';
+  timestamp: string; // ISO or unix timestamp
+  format: 'R' | 'F' | 'D' | 'T'; // R: Relative, F: Full, D: Date, T: Time
+  label?: string;
+  hidden?: boolean;
+}
+
 export interface ComponentSection {
   id: string;
   type: 'section';
   accessory?: ComponentAccessory;
   texts: ComponentTextDisplay[];
+  hidden?: boolean;
 }
 
 export interface ComponentSeparator {
@@ -96,6 +147,7 @@ export interface ComponentSeparator {
   type: 'separator';
   spacing: 'Small' | 'Medium' | 'Large';
   divider: boolean;
+  hidden?: boolean;
 }
 
 export interface ComponentMedia {
@@ -104,6 +156,7 @@ export interface ComponentMedia {
   url: string;
   caption?: string;
   spoiler?: boolean;
+  hidden?: boolean;
 }
 
 export interface ComponentActionRow {
@@ -112,13 +165,19 @@ export interface ComponentActionRow {
   rowType?: 'buttons' | 'select_menu';
   buttons: WelcomeButton[];
   selectMenu?: ComponentSelectMenu;
+  hidden?: boolean;
 }
 
 export type ContainerSubComponent =
   | ComponentSection
   | ComponentSeparator
   | ComponentActionRow
-  | ComponentMedia;
+  | ComponentMedia
+  | ComponentFile
+  | ComponentFields
+  | ComponentQuote
+  | ComponentCodeBlock
+  | ComponentTimestamp;
 
 export interface MessageContainer {
   id: string;
@@ -141,13 +200,79 @@ export interface MessageBuilderConfig {
 export type WelcomeConfig = MessageBuilderConfig;
 export type GoodbyeConfig = MessageBuilderConfig;
 
+export type ActionTriggerType =
+  | 'command'           // Komenda slash lub z prefiksem (np. !pomoc, !ranga)
+  | 'message_sent'      // Wysłanie wiadomości na kanale
+  | 'member_join'       // Dołączenie użytkownika do serwera
+  | 'member_leave'      // Opuszczenie serwera przez użytkownika
+  | 'reaction_add'      // Dodanie reakcji do wiadomości
+  | 'button_click';     // Kliknięcie w przycisk / interakcja
+
+export interface ActionTriggerConfig {
+  type: ActionTriggerType;
+  commandName?: string;
+  commandDescription?: string;
+  channelScope: 'all' | 'specific';
+  channelId?: string;
+  channelName?: string;
+  messageMatchType?: 'contains' | 'exact' | 'starts_with' | 'any';
+  messageContent?: string;
+  ignoreBots?: boolean;
+  roleScope?: 'everyone' | 'admin_only' | 'specific_role';
+  allowedRoleId?: string;
+}
+
+export type ActionStepType =
+  | 'wait'              // Czekaj określony czas (np. 5s)
+  | 'send_message'      // Wyślij wiadomość na kanał
+  | 'send_ephemeral'    // Dyskretna odpowiedź (widoczna tylko dla klikającego)
+  | 'send_dm'           // Wiadomość prywatna do użytkownika
+  | 'give_role'         // Nadaj rolę
+  | 'remove_role'       // Odbierz rolę
+  | 'kick_member'       // Wyrzuć użytkownika
+  | 'ban_member'        // Zbanuj użytkownika
+  | 'delete_message'    // Usuń wiadomość wywołującą
+  | 'send_embed'        // Wyślij sformatowany Embed
+  | 'random_message'    // Wybierz 1 z kilku wariantów
+  | 'change_nickname';  // Zmień nick użytkownika
+
+export interface ActionStep {
+  id: string;
+  type: ActionStepType;
+  durationSeconds?: number;
+  messageText?: string;
+  targetChannel?: 'same' | 'specific';
+  channelId?: string;
+  roleName?: string;
+  roleId?: string;
+  reason?: string;
+  deleteMessageDays?: number;
+  embedTitle?: string;
+  embedDescription?: string;
+  embedColor?: string;
+  embedImageUrl?: string;
+  embedFooter?: string;
+  randomOptions?: string[];
+  newNickname?: string;
+}
+
+export interface ActionFlow {
+  id: string;
+  name: string;
+  description?: string;
+  enabled: boolean;
+  trigger: ActionTriggerConfig;
+  steps: ActionStep[];
+}
+
 export interface GuildConfig {
   guildId: string;
   guildName: string;
   prefix: string;
   language: string;
-  welcome: WelcomeConfig;
-  goodbye: GoodbyeConfig;
+  welcome?: WelcomeConfig;
+  goodbye?: GoodbyeConfig;
+  actions?: ActionFlow[];
   embedColor?: string;
   updatedAt: string;
 }
@@ -268,3 +393,57 @@ export function getDefaultGoodbyeConfig(): GoodbyeConfig {
     buttons: [],
   };
 }
+
+export function getDefaultActionsConfig(): ActionFlow[] {
+  return [
+    {
+      id: 'flow-welcome-auto',
+      name: 'Automatyczne powitanie i rola',
+      description: 'Gdy nowy użytkownik dołączy, wyślij wiadomość, poczekaj 5s i nadaj rolę',
+      enabled: true,
+      trigger: {
+        type: 'member_join',
+        channelScope: 'all',
+      },
+      steps: [
+        {
+          id: 'step-1',
+          type: 'send_message',
+          messageText: '👋 Witamy serdecznie {user} na serwerze **{server.name}**!',
+          targetChannel: 'same'
+        },
+        {
+          id: 'step-2',
+          type: 'wait',
+          durationSeconds: 5
+        },
+        {
+          id: 'step-3',
+          type: 'give_role',
+          roleName: 'Nowy Członek'
+        }
+      ]
+    },
+    {
+      id: 'flow-command-help',
+      name: 'Komenda !pomoc',
+      description: 'Odpowiedź na wpisanie komendy !pomoc na czacie',
+      enabled: true,
+      trigger: {
+        type: 'command',
+        commandName: '!pomoc',
+        channelScope: 'all',
+        roleScope: 'everyone'
+      },
+      steps: [
+        {
+          id: 'step-h1',
+          type: 'send_message',
+          messageText: '🤖 **KitekBot Pomoc**:\nOto lista dostępnych funkcji na serwerze {server.name}!\nSprawdź regulamin oraz przypisane role.',
+          targetChannel: 'same'
+        }
+      ]
+    }
+  ];
+}
+

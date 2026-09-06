@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { LogIn, LogOut, Plus, ShieldCheck, Crown, ExternalLink, RefreshCw, Loader2, Server, FolderArchive, Settings, CheckCircle2, Sliders, Bot, Radio, Wifi, WifiOff, Copy, Check, AlertCircle, Sparkles, X } from 'lucide-react';
+import { LogIn, LogOut, Plus, ShieldCheck, Crown, ExternalLink, RefreshCw, Loader2, Server, FolderArchive, Settings, CheckCircle2, Sliders, Bot, Radio, Wifi, WifiOff, Copy, Check, AlertCircle, Sparkles, X, Zap } from 'lucide-react';
 import { GuildSettingsModal } from './components/GuildSettingsModal';
 import { DownloadBotView } from './components/DownloadBotView';
 import { BotApiConnectionModal } from './components/BotApiConnectionModal';
 import { MessageStyleBuilder } from './components/MessageStyleBuilder';
+import { ActionsBuilder } from './components/ActionsBuilder';
 
 interface DiscordGuild {
   id: string;
@@ -63,7 +64,7 @@ export default function App() {
     try {
       localStorage.setItem('kitek_active_guild', JSON.stringify(guild));
     } catch {}
-    navigateTo('/welcome');
+    navigateTo('/actions');
   };
 
   const handleGoToDashboard = () => {
@@ -662,9 +663,8 @@ export default function App() {
 
   const isDownload = currentPath === '/download' || currentPath === '/pobierz';
   const isLogin = currentPath === '/login';
-  const isWelcome = (currentPath === '/welcome' || currentPath.startsWith('/welcome')) && Boolean(activeGuild);
-  const isGoodbye = (currentPath === '/goodbye' || currentPath.startsWith('/goodbye')) && Boolean(activeGuild);
-  const isDashboard = (currentPath === '/dashboard' || (!isDownload && !isLogin && !isWelcome && !isGoodbye)) && Boolean(user);
+  const isActions = (currentPath === '/actions' || currentPath.startsWith('/actions') || currentPath === '/welcome' || currentPath === '/goodbye') && Boolean(activeGuild);
+  const isDashboard = (currentPath === '/dashboard' || (!isDownload && !isLogin && !isActions)) && Boolean(user);
 
   const userGuildsCount = user?.guilds?.length || 0;
   const isGuildBotPresent = (guildId: string) => {
@@ -806,7 +806,7 @@ export default function App() {
                       <span>Pobierz Pliki</span>
                     </button>
 
-                    {/* DYNAMICZNE KATEGORIE DLA WYBRANEGO SERWERA: /welcome oraz /goodbye */}
+                    {/* DYNAMICZNA KATEGORIA DLA WYBRANEGO SERWERA: /actions */}
                     {activeGuild && (
                       <div className="w-full pt-3 mt-1 border-t border-[#3b3c47]/80 flex flex-col space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
                         {/* Pigułka aktywnego serwera z możliwością powrotu */}
@@ -834,47 +834,25 @@ export default function App() {
                           </button>
                         </div>
 
-                        {/* Kategoria: /welcome */}
+                        {/* Kategoria: Actions */}
                         <button
-                          id="category-welcome-btn"
-                          onClick={() => navigateTo('/welcome')}
+                          id="category-actions-btn"
+                          onClick={() => navigateTo('/actions')}
                           className={`w-full py-2.5 px-4 rounded-xl font-extrabold tracking-wide text-sm text-center uppercase transition-all duration-200 flex items-center justify-between cursor-pointer shadow-md ${
-                            currentPath === '/welcome'
+                            isActions
                               ? 'bg-[#5865F2] text-white shadow-indigo-950/40 border border-[#7682f7]'
                               : 'bg-[#272831] hover:bg-[#202128] text-neutral-300 hover:text-white border border-[#3b3c47]'
                           }`}
                           style={{ fontFamily: 'Montserrat, sans-serif' }}
                         >
                           <div className="flex items-center gap-2.5">
-                            <Sparkles className={`w-4 h-4 shrink-0 ${currentPath === '/welcome' ? 'text-white' : 'text-amber-400'}`} />
-                            <span>/welcome</span>
+                            <Zap className={`w-4 h-4 shrink-0 ${isActions ? 'text-amber-300' : 'text-[#5865F2]'}`} />
+                            <span>Actions</span>
                           </div>
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded font-black ${
-                            currentPath === '/welcome' ? 'bg-black/20 text-white' : 'bg-[#5865F2]/20 text-[#8590ff]'
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-black ${
+                            isActions ? 'bg-black/30 text-white' : 'bg-[#5865F2]/20 text-[#8590ff]'
                           }`}>
-                            Powitania
-                          </span>
-                        </button>
-
-                        {/* Kategoria: /goodbye */}
-                        <button
-                          id="category-goodbye-btn"
-                          onClick={() => navigateTo('/goodbye')}
-                          className={`w-full py-2.5 px-4 rounded-xl font-extrabold tracking-wide text-sm text-center uppercase transition-all duration-200 flex items-center justify-between cursor-pointer shadow-md ${
-                            currentPath === '/goodbye'
-                              ? 'bg-[#ED4245] text-white shadow-red-950/40 border border-[#f26365]'
-                              : 'bg-[#272831] hover:bg-[#202128] text-neutral-300 hover:text-white border border-[#3b3c47]'
-                          }`}
-                          style={{ fontFamily: 'Montserrat, sans-serif' }}
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <LogOut className={`w-4 h-4 shrink-0 ${currentPath === '/goodbye' ? 'text-white' : 'text-red-400'}`} />
-                            <span>/goodbye</span>
-                          </div>
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded font-black ${
-                            currentPath === '/goodbye' ? 'bg-black/20 text-white' : 'bg-red-500/20 text-red-300'
-                          }`}>
-                            Pożegnania
+                            Automatyzacje
                           </span>
                         </button>
                       </div>
@@ -949,11 +927,10 @@ export default function App() {
           {isDownload ? (
             /* WIDOK: POBIERZ PLIKI BOTA */
             <DownloadBotView />
-          ) : (isWelcome || isGoodbye) && activeGuild ? (
-            /* WIDOK: MESSAGE STYLE BUILDER DLA POWITAŃ I POŻEGNAŃ */
+          ) : isActions && activeGuild ? (
+            /* WIDOK: KREATOR AKCJI (ACTIONS BUILDER) */
             <div className="w-full flex-1 flex flex-col">
-              <MessageStyleBuilder
-                type={isGoodbye ? 'goodbye' : 'welcome'}
+              <ActionsBuilder
                 guild={activeGuild}
                 onBackToDashboard={handleGoToDashboard}
               />

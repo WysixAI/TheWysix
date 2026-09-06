@@ -12,10 +12,26 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
-    version: "v5.3.0",
-    date: "Dzisiaj, 05.09.2026",
-    badge: "NAJNOWSZA (v5.3.0)",
+    version: "v5.4.0",
+    date: "Dzisiaj, 06.09.2026",
+    badge: "NAJNOWSZA (v5.4.0)",
     badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Wdrożono elastyczny system Automatyzacji i Przepływów (Actions & Flows) zastępujący sztywne zakładki",
+      "Dodano interaktywny blok wyzwalacza (Trigger): Komenda czatu/slash, Wysłanie wiadomości, Dołączenie użytkownika (Member Join), Opuszczenie serwera (Member Leave), Kliknięcie przycisku oraz Dodanie reakcji",
+      "Konfiguracja wyzwalacza: Gdzie (zasięg kanałów lub konkretny kanał) oraz Kiedy (filtr treści: Dowolna treść, Zawiera frazę, Dokładnie równa, Zaczyna się od)",
+      "Sekwencja kroków akcji z możliwością swobodnego przestawiania kolejności każdego kroku przyciskami ↑ / ↓",
+      "Dodano krok opóźnienia Czekaj (Wait / Delay) z regulacją czasu (np. 5s, 10s, 30s) z suwakiem i szybkimi przyciskami",
+      "Bogaty zestaw kroków: Wyślij wiadomość, Dyskretna odpowiedź Ephemeral, Wiadomość prywatna DM, Nadaj rolę, Odbierz rolę, Wyrzuć (Kick), Zbanuj (Ban), Usuń wiadomość, Wyślij Embed, Losowa odpowiedź, Zmień pseudonim",
+      "Wbudowany tester przepływu akcji na żywo z realistycznym odliczaniem czasu i konsolą logów",
+      "Zaktualizowano silnik bota w index.js o natychmiastowe przetwarzanie akcji z pliku konfiguracyjnego"
+    ]
+  },
+  {
+    version: "v5.3.0",
+    date: "Wczoraj, 05.09.2026",
+    badge: "POPRZEDNIA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Wdrożono konfigurowalny system akcji przycisków: Kick (Wyrzucenie), Ban (Zbanowanie z liczbą dni usunięcia wiadomości), Send Message (Wysłanie wiadomości na kanał), Ephemeral Message (Wiadomość widoczna tylko dla klikającego), Give Role (Nadanie roli), Remove Role (Odebranie roli), Send DM (Wiadomość prywatna)",
       "Całkowicie usunięto z góry narzucone szablony (Presets) — nowy kontener Embed tworzy się teraz jako czysty, pusty szablon gotowy do dowolnej aranżacji",
