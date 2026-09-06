@@ -12,10 +12,25 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
+    version: "v5.9.0",
+    date: "Dzisiaj, 06.09.2026",
+    badge: "NAJNOWSZA (v5.9.0)",
+    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Wdrożono interaktywną swobodną planszę węzłów (Visual Node Graph Canvas) z dowolnym rozmieszczaniem klocków na płótnie 2D",
+      "Przeciąganie klocków bezpośrednio z przybornika (Drag & Drop) i upuszczanie w wybranym miejscu planszy z automatycznym przeliczaniem współrzędnych",
+      "Łączenie klocków interaktywnymi kablami / linkami (SVG Bezier Cables) z dynamicznym podświetlaniem portów wejścia i wyjścia",
+      "Dedykowane porty rozgałęzień dla warunków IF: port THEN (zielony kabel) oraz port ELSE (czerwony kabel)",
+      "Animowane impulsy przepływu energii na kablach oraz szybkie rozłączanie (✕) po najechaniu myszą",
+      "Sterowanie płótnem: swobodne przesuwanie (Pan), płynne przybliżanie/oddalanie (Zoom), auto-uporządkowanie (Auto-Layout) oraz natychmiastowy przełącznik między widokiem planszy a listą kaskadową",
+      "Zaktualizowano paczkę ZIP bota, silnik wykonawczy oraz manifest package.json do wersji v5.9.0"
+    ]
+  },
+  {
     version: "v5.8.0",
     date: "Dzisiaj, 06.09.2026",
-    badge: "NAJNOWSZA (v5.8.0)",
-    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    badge: "POPRZEDNIA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Wdrożono zaawansowany kreator komend w standardzie dashboard.botghost.com/dashboard/builder (BotGhost Visual Studio)",
       "Nowy lewy pasek przybornika (Action Block Toolbox) z podziałem na kategorie (Logika, Treść, Role, Moderacja, Kanały), wyszukiwarką i szybkim dodawaniem",

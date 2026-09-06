@@ -40,7 +40,8 @@ import {
   ExternalLink,
   ChevronRight,
   Maximize2,
-  Minimize2
+  Minimize2,
+  Move
 } from 'lucide-react';
 import {
   ActionFlow,
@@ -55,6 +56,7 @@ import { BotGhostToolbox, TOOLBOX_BLOCKS, ToolboxBlockItem } from './botghost/Bo
 import { BotGhostEmbedPreview } from './botghost/BotGhostEmbedPreview';
 import { BotGhostVariablesModal } from './botghost/BotGhostVariablesModal';
 import { BotGhostSimulatorModal } from './botghost/BotGhostSimulatorModal';
+import { BotGhostNodeCanvas } from './botghost/BotGhostNodeCanvas';
 
 interface ActionsBuilderProps {
   guild: { id: string; name: string; icon: string | null };
@@ -245,6 +247,9 @@ export function ActionsBuilder({ guild, onBackToDashboard }: ActionsBuilderProps
 
   // Pasek boczny BotGhost Toolbox
   const [isToolboxOpen, setIsToolboxOpen] = useState(true);
+
+  // Tryb widoku: 'nodes' (swobodna plansza z kablami) lub 'list' (tradycyjna lista)
+  const [canvasMode, setCanvasMode] = useState<'nodes' | 'list'>('nodes');
 
   // Modale
   const [isVariablesModalOpen, setIsVariablesModalOpen] = useState(false);
@@ -471,12 +476,33 @@ export function ActionsBuilder({ guild, onBackToDashboard }: ActionsBuilderProps
     handleUpdateCurrentFlow((prev) => {
       const steps = [...prev.steps];
       const idx = targetIndex !== null ? targetIndex : insertAtIndex;
+      
+      // Oblicz pozycję na planszy (Node Canvas)
+      const lastStep = steps[steps.length - 1];
+      const nextY = lastStep && typeof lastStep.y === 'number' ? lastStep.y + 260 : 320 + steps.length * 260;
+      const stepWithPos: ActionStep = {
+        ...newStep,
+        x: typeof newStep.x === 'number' ? newStep.x : 380,
+        y: typeof newStep.y === 'number' ? newStep.y : nextY
+      };
+
       if (idx !== null && idx >= 0 && idx <= steps.length) {
-        steps.splice(idx, 0, newStep);
+        steps.splice(idx, 0, stepWithPos);
       } else {
-        steps.push(newStep);
+        steps.push(stepWithPos);
       }
-      return { ...prev, steps };
+
+      // Automatyczne połączenie kablem
+      const conns = [...(prev.connections || [])];
+      const fromNodeId = steps.length === 1 ? 'trigger' : steps[steps.length - 2].id;
+      conns.push({
+        id: `conn-${fromNodeId}-${stepWithPos.id}`,
+        fromNodeId,
+        fromPort: 'default',
+        toNodeId: stepWithPos.id
+      });
+
+      return { ...prev, steps, connections: conns };
     });
 
     setInsertAtIndex(null);
@@ -808,6 +834,34 @@ export function ActionsBuilder({ guild, onBackToDashboard }: ActionsBuilderProps
             <span>{currentFlow.enabled ? 'Aktywna' : 'Wyłączona'}</span>
           </button>
 
+          {/* Przełącznik trybu widoku: Plansza z kablami / Lista kaskadowa */}
+          <div className="flex items-center bg-[#23242e] p-0.5 rounded-xl border border-[#343542]">
+            <button
+              onClick={() => setCanvasMode('nodes')}
+              title="Swobodna plansza z kablami łączącymi (Node Graph)"
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                canvasMode === 'nodes'
+                  ? 'bg-[#5865F2] text-white shadow-sm'
+                  : 'text-neutral-400 hover:text-white'
+              }`}
+            >
+              <Move className="w-3.5 h-3.5" />
+              <span>Plansza & Kable</span>
+            </button>
+            <button
+              onClick={() => setCanvasMode('list')}
+              title="Klasyczna lista kaskadowa"
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                canvasMode === 'list'
+                  ? 'bg-[#5865F2] text-white shadow-sm'
+                  : 'text-neutral-400 hover:text-white'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>Lista</span>
+            </button>
+          </div>
+
           {/* Przycisk zapisu */}
           <button
             id="save-command-flow-btn"
@@ -838,14 +892,24 @@ export function ActionsBuilder({ guild, onBackToDashboard }: ActionsBuilderProps
           onOpenVariables={() => setIsVariablesModalOpen(true)}
         />
 
-        {/* GŁÓWNE PŁÓTNO ZE WZOREM KROPKOWYM (DOT-MATRIX CANVAS) */}
-        <main
-          className="flex-1 overflow-y-auto p-4 sm:p-8 flex flex-col items-center select-none"
-          style={{
-            backgroundImage: 'radial-gradient(circle, #2b2d39 1px, transparent 1px)',
-            backgroundSize: '24px 24px'
-          }}
-        >
+        {/* PŁÓTNO BOTGHOST: SWOBODNA PLANSZA Z KABLAMI LUB LISTA KASKADOWA */}
+        {canvasMode === 'nodes' ? (
+          <BotGhostNodeCanvas
+            flow={currentFlow}
+            serverName={guild.name}
+            onUpdateFlow={handleUpdateCurrentFlow}
+            onOpenTriggerModal={() => setIsTriggerModalOpen(true)}
+            onOpenVariables={() => setIsVariablesModalOpen(true)}
+            availableRoles={availableRoles}
+          />
+        ) : (
+          <main
+            className="flex-1 overflow-y-auto p-4 sm:p-8 flex flex-col items-center select-none"
+            style={{
+              backgroundImage: 'radial-gradient(circle, #2b2d39 1px, transparent 1px)',
+              backgroundSize: '24px 24px'
+            }}
+          >
           {/* =============================================================== */}
           {/* 1. KARTA WYZWALACZA (BOTGHOST TRIGGER CARD)                     */}
           {/* =============================================================== */}
@@ -1499,6 +1563,7 @@ export function ActionsBuilder({ guild, onBackToDashboard }: ActionsBuilderProps
             </span>
           </div>
         </main>
+        )}
       </div>
 
       {/* =================================================================== */}

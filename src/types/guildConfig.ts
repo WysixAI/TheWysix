@@ -260,11 +260,24 @@ export type ActionStepType =
   // Zgodność wsteczna
   | 'random_message';
 
+export interface ActionConnection {
+  id: string;
+  fromNodeId: string; // 'trigger' lub id kroku
+  fromPort?: 'default' | 'then' | 'else';
+  toNodeId: string;   // id kroku docelowego
+}
+
 export interface ActionStep {
   id: string;
   type: ActionStepType;
   title?: string;
   collapsed?: boolean;
+  // Pozycja na płótnie (Drag & Drop Canvas)
+  x?: number;
+  y?: number;
+  nextStepId?: string;
+  thenStepId?: string;
+  elseStepId?: string;
   // Timing & Cooldown
   durationSeconds?: number;
   cooldownSeconds?: number;
@@ -309,7 +322,9 @@ export interface ActionFlow {
   description?: string;
   enabled: boolean;
   trigger: ActionTriggerConfig;
+  triggerPosition?: { x: number; y: number };
   steps: ActionStep[];
+  connections?: ActionConnection[];
   updatedAt?: string;
 }
 

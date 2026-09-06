@@ -442,10 +442,11 @@ export function BotGhostToolbox({
             </button>
           </div>
 
-          {/* Przewijana lista klocków do kliknięcia */}
+          {/* Przewijana lista klocków do kliknięcia lub przeciągnięcia */}
           <div className="flex-1 overflow-y-auto p-3 space-y-2">
-            <div className="text-[10px] font-black uppercase tracking-wider text-neutral-400 px-1">
-              Kliknij klocek, aby dodać go do przepływu:
+            <div className="text-[10px] font-black uppercase tracking-wider text-neutral-400 px-1 flex items-center justify-between">
+              <span>Klocki akcji</span>
+              <span className="text-[#8590ff] font-bold">Chwyć i przeciągnij</span>
             </div>
 
             {filteredBlocks.map((block) => {
@@ -453,13 +454,20 @@ export function BotGhostToolbox({
               return (
                 <div
                   key={block.type}
+                  draggable
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData('application/json', JSON.stringify({ type: block.type }));
+                    e.dataTransfer.setData('text/plain', block.type);
+                    e.dataTransfer.effectAllowed = 'copy';
+                  }}
                   onClick={() => onAddStep(block.type)}
-                  className={`p-2.5 rounded-xl border transition-all flex items-start gap-2.5 cursor-pointer group hover:scale-[1.01] active:scale-[0.99] ${block.bgColor} ${block.borderColor} ${block.glowColor}`}
+                  className={`p-2.5 rounded-xl border transition-all flex items-start gap-2.5 cursor-grab active:cursor-grabbing group hover:scale-[1.01] active:scale-[0.99] select-none ${block.bgColor} ${block.borderColor} ${block.glowColor}`}
+                  title="Kliknij lub przeciągnij na planszę w dowolne miejsce!"
                 >
-                  <div className={`p-1.5 rounded-lg bg-black/30 ${block.color} shrink-0 group-hover:scale-110 transition-transform mt-0.5`}>
+                  <div className={`p-1.5 rounded-lg bg-black/30 ${block.color} shrink-0 group-hover:scale-110 transition-transform mt-0.5 pointer-events-none`}>
                     <Icon className="w-4 h-4" />
                   </div>
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1 pointer-events-none">
                     <div className="flex items-center justify-between gap-1">
                       <span className="text-xs font-bold text-white group-hover:text-white truncate">
                         {block.title}
