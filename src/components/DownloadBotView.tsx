@@ -12,10 +12,25 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
+    version: "v6.1.0",
+    date: "Dzisiaj, 06.09.2026",
+    badge: "NAJNOWSZA (v6.1.0)",
+    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Optymalizacja mechaniki linii połączeń: wyeliminowano wszelkie opóźnienia i lagi podczas przesuwania węzłów oraz przeciągania kabli",
+      "Płynne poziome krzywe Béziera (Horizontal S-Curves) renderowane w 60/120 FPS dzięki akceleracji requestAnimationFrame",
+      "Prawostronne porty wyjściowe: piny wyjścia znajdują się po prawej stronie węzłów, a porty wejścia po lewej stronie (układ od lewej do prawej)",
+      "Rozszerzone porty dla warunków IF: dedykowany prawy górny port THEN [zielony] oraz prawy dolny port ELSE [czerwony]",
+      "Czysty stan startowy: na początku nie ma żadnych predefiniowanych skryptów; wyświetlany jest estetyczny ekran z przyciskiem 'Stwórz funkcję'",
+      "Rozbudowany boczny panel kastomizacji (Node Inspector Drawer) z bogatym edytorem Embed, paletą kolorów Discord, tagami zmiennych, rolami i czasami",
+      "Zaktualizowano paczkę ZIP bota i manifest package.json do wersji v6.1.0"
+    ]
+  },
+  {
     version: "v6.0.0",
     date: "Dzisiaj, 06.09.2026",
-    badge: "NAJNOWSZA (v6.0.0)",
-    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    badge: "POPRZEDNIA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Wizualna renowacja interfejsu w oparciu o najnowszy design BotGhost Studio (Hub, Toolbox, Node Canvas)",
       "Wdrożono główny panel BotGhost Hub z podziałem na Custom Commands, Custom Events, Embed Messages oraz bannerem Premium",

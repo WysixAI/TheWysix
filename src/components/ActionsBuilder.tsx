@@ -307,7 +307,7 @@ export function ActionsBuilder({ guild, onBackToDashboard }: ActionsBuilderProps
       } catch {}
 
       if (initialFlows.length === 0) {
-        initialFlows = QUICK_TEMPLATES.map((t) => ({ ...t.flow }));
+        initialFlows = [];
       }
 
       setFlows(initialFlows);
@@ -371,24 +371,20 @@ export function ActionsBuilder({ guild, onBackToDashboard }: ActionsBuilderProps
   const handleCreateNewCommand = () => {
     const newFlow: ActionFlow = {
       id: 'flow-' + Date.now(),
-      name: 'Nowa Komenda Slash',
-      description: 'Własna komenda utworzona w BotGhost Builder',
+      name: 'Nowa Funkcja',
+      description: 'Własna funkcja bota Discord',
       enabled: true,
       trigger: {
         type: 'command',
-        commandName: 'komenda_' + Math.floor(Math.random() * 900 + 100),
-        commandDescription: 'Własna komenda bota Discord',
+        commandName: 'funkcja_' + Math.floor(Math.random() * 900 + 100),
+        commandDescription: 'Własna funkcja bota',
         channelScope: 'all',
         roleScope: 'everyone'
       },
-      steps: [
-        {
-          id: 'step-1',
-          type: 'send_message',
-          messageText: '👋 Cześć {user}! To jest komenda na serwerze {server.name}.',
-          targetChannel: 'same'
-        }
-      ]
+      triggerPosition: { x: 80, y: 100 },
+      errorHandlerPosition: { x: 80, y: 380 },
+      steps: [],
+      connections: []
     };
     const updated = [...flows, newFlow];
     saveAllFlows(updated);
@@ -477,13 +473,13 @@ export function ActionsBuilder({ guild, onBackToDashboard }: ActionsBuilderProps
       const steps = [...prev.steps];
       const idx = targetIndex !== null ? targetIndex : insertAtIndex;
       
-      // Oblicz pozycję na planszy (Node Canvas)
+      // Oblicz pozycję na planszy w poziomie (Left-to-Right)
       const lastStep = steps[steps.length - 1];
-      const nextY = lastStep && typeof lastStep.y === 'number' ? lastStep.y + 260 : 320 + steps.length * 260;
+      const nextX = lastStep && typeof lastStep.x === 'number' ? lastStep.x + 400 : 480 + steps.length * 400;
       const stepWithPos: ActionStep = {
         ...newStep,
-        x: typeof newStep.x === 'number' ? newStep.x : 380,
-        y: typeof newStep.y === 'number' ? newStep.y : nextY
+        x: typeof newStep.x === 'number' ? newStep.x : nextX,
+        y: typeof newStep.y === 'number' ? newStep.y : 100
       };
 
       if (idx !== null && idx >= 0 && idx <= steps.length) {
@@ -560,6 +556,46 @@ export function ActionsBuilder({ guild, onBackToDashboard }: ActionsBuilderProps
   // WIDOK 1: PRZEGLĄD KOMEND (DASHBOARD KART)
   // =========================================================================
   if (!editingFlowId || !currentFlow) {
+    if (flows.length === 0) {
+      return (
+        <div className="flex-1 w-full max-w-4xl mx-auto p-4 sm:p-8 flex flex-col items-center justify-center min-h-[600px] text-center select-none">
+          <div className="flex items-center gap-3.5 mb-8">
+            <button
+              onClick={onBackToDashboard}
+              title="Wróć do listy serwerów"
+              className="p-2.5 bg-[#1f2027] hover:bg-[#252630] text-neutral-400 hover:text-white rounded-xl border border-[#343542] transition-all cursor-pointer flex items-center gap-2 text-xs font-bold"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Powrót do serwera</span>
+            </button>
+            <span className="text-xs text-neutral-400 font-medium">
+              Serwer: <strong className="text-white">{guild.name}</strong>
+            </span>
+          </div>
+
+          <div className="w-24 h-24 rounded-3xl bg-gradient-to-tr from-[#5865F2]/20 via-[#5865F2]/10 to-transparent border border-[#5865F2]/30 flex items-center justify-center text-[#5865F2] mb-6 shadow-2xl shadow-indigo-950/40">
+            <Sparkles className="w-12 h-12 stroke-[2]" />
+          </div>
+
+          <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+            Kreator Funkcji Bota
+          </h2>
+          <p className="text-sm sm:text-base text-neutral-400 mt-2.5 max-w-md leading-relaxed">
+            Nie masz jeszcze żadnego skryptu ani funkcji. Kliknij przycisk poniżej, aby rozpocząć tworzenie pierwszej funkcji.
+          </p>
+
+          <button
+            id="create-first-function-btn"
+            onClick={handleCreateNewCommand}
+            className="mt-8 px-8 py-4 bg-gradient-to-r from-[#5865F2] to-[#7289da] hover:from-[#4752C4] hover:to-[#5865F2] text-white rounded-2xl text-base font-black tracking-wider uppercase transition-all shadow-xl shadow-indigo-950/60 flex items-center gap-3 active:scale-95 cursor-pointer border border-[#8590ff]/50 hover:shadow-indigo-500/20"
+          >
+            <Plus className="w-5 h-5 stroke-[3]" />
+            <span>Stwórz funkcję</span>
+          </button>
+        </div>
+      );
+    }
+
     const filteredFlows = flows.filter((f) => {
       const matches =
         f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -592,7 +628,7 @@ export function ActionsBuilder({ guild, onBackToDashboard }: ActionsBuilderProps
                   <span>Kreator Komend BotGhost</span>
                 </h1>
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wider uppercase bg-[#5865F2]/20 text-[#8590ff] border border-[#5865F2]/40">
-                  Builder v5.8.0
+                  Builder v6.0.0
                 </span>
                 <span className="text-xs text-neutral-400 font-medium">
                   na serwerze <strong className="text-white">{guild.name}</strong>
@@ -608,10 +644,10 @@ export function ActionsBuilder({ guild, onBackToDashboard }: ActionsBuilderProps
             <button
               id="create-new-command-btn"
               onClick={handleCreateNewCommand}
-              className="px-4 py-2.5 bg-gradient-to-r from-[#5865F2] to-[#7289DA] hover:from-[#4752C4] hover:to-[#5865F2] text-white rounded-xl text-xs sm:text-sm font-black tracking-wide uppercase transition-all shadow-lg shadow-indigo-950/40 flex items-center gap-2 active:scale-95 cursor-pointer border border-[#8590ff]/40"
+              className="px-5 py-2.5 bg-gradient-to-r from-[#5865F2] to-[#7289DA] hover:from-[#4752C4] hover:to-[#5865F2] text-white rounded-xl text-xs sm:text-sm font-black tracking-wide uppercase transition-all shadow-lg shadow-indigo-950/40 flex items-center gap-2 active:scale-95 cursor-pointer border border-[#8590ff]/40"
             >
               <Plus className="w-4 h-4 stroke-[3]" />
-              <span>+ Utwórz nową komendę</span>
+              <span>+ Stwórz funkcję</span>
             </button>
           </div>
         </div>

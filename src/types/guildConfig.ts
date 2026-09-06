@@ -227,6 +227,7 @@ export interface ActionTriggerConfig {
   buttonCustomId?: string;
   reactionEmoji?: string;
   scheduleIntervalMinutes?: number;
+  cooldownSeconds?: number;
 }
 
 export type ActionStepCategory = 'logic' | 'message' | 'member' | 'moderation' | 'channel';
@@ -541,56 +542,7 @@ export function getDefaultGoodbyeConfig(): GoodbyeConfig {
 }
 
 export function getDefaultActionsConfig(): ActionFlow[] {
-  return [
-    {
-      id: 'flow-welcome-auto',
-      name: 'Automatyczne powitanie i rola',
-      description: 'Gdy nowy użytkownik dołączy, wyślij wiadomość, poczekaj 5s i nadaj rolę',
-      enabled: true,
-      trigger: {
-        type: 'member_join',
-        channelScope: 'all',
-      },
-      steps: [
-        {
-          id: 'step-1',
-          type: 'send_message',
-          messageText: '👋 Witamy serdecznie {user} na serwerze **{server.name}**!',
-          targetChannel: 'same'
-        },
-        {
-          id: 'step-2',
-          type: 'wait',
-          durationSeconds: 5
-        },
-        {
-          id: 'step-3',
-          type: 'give_role',
-          roleName: 'Nowy Członek'
-        }
-      ]
-    },
-    {
-      id: 'flow-command-help',
-      name: 'Komenda !pomoc',
-      description: 'Odpowiedź na wpisanie komendy !pomoc na czacie',
-      enabled: true,
-      trigger: {
-        type: 'command',
-        commandName: '!pomoc',
-        channelScope: 'all',
-        roleScope: 'everyone'
-      },
-      steps: [
-        {
-          id: 'step-h1',
-          type: 'send_message',
-          messageText: '🤖 **KitekBot Pomoc**:\nOto lista dostępnych funkcji na serwerze {server.name}!\nSprawdź regulamin oraz przypisane role.',
-          targetChannel: 'same'
-        }
-      ]
-    }
-  ];
+  return [];
 }
 
 export function getDefaultTicketConfig(): TicketConfig {

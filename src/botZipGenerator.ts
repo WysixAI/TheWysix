@@ -11,8 +11,8 @@ export function generateBotZip(
   // 1. package.json
   const packageJson = {
     name: "kitek-bot",
-    version: "6.0.0",
-    description: "KitekBot Discord Bot v6.0.0 — renowacja interfejsu BotGhost Studio, Hub modułów, nowy przybornik klocków oraz węzły Command & Error Handler",
+    version: "6.1.0",
+    description: "KitekBot Discord Bot v6.1.0 — poziome porty wyjściowe (prawo-lewo), responsywne krzywe Béziera, pusty stan początkowy oraz rozbudowane panele kastomizacji",
     main: "index.js",
     scripts: {
       prestart: "npm install --no-audit --prefer-offline",
