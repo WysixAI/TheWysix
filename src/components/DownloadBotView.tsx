@@ -12,10 +12,26 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
+    version: "v5.5.0",
+    date: "Dzisiaj, 06.09.2026",
+    badge: "NAJNOWSZA (v5.5.0)",
+    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Wdrożono zaawansowany moduł Zgłoszeń Ticket (Components V2) — pełna swoboda tworzenia paneli pomocy i zgłoszeń",
+      "Dodano selektor kanału docelowego oraz przycisk 'Send (Wyślij)', który natychmiast wysyła gotowy panel ticketów na Discorda",
+      "Konfiguracja wiadomości panelu oraz karty Embed (tytuł, opis z markdown, kolorystyka, stopka, timestamp)",
+      "Nielimitowany edytor komponentów V2 (bez ograniczeń): swobodne dodawanie przycisków oraz opcji rozwijanego Select Menu",
+      "Dynamiczne, żywe wybarwianie przycisków (Primary Blurple, Success Green, Danger Red, Secondary Grey, Link) oraz Select Menu",
+      "Każdy przycisk i opcja menu posiada własną kategorię, prefiks kanału, dedykowaną rolę wsparcia oraz spersonalizowane powitanie",
+      "Wbudowany w bota silnik automatycznego tworzenia prywatnych kanałów zgłoszeń z restrykcyjnymi uprawnieniami (tylko autor i support)",
+      "Interaktywny przycisk '🔒 Zamknij Ticket' z automatycznym odliczaniem i bezpiecznym usunięciem kanału"
+    ]
+  },
+  {
     version: "v5.4.0",
     date: "Dzisiaj, 06.09.2026",
-    badge: "NAJNOWSZA (v5.4.0)",
-    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    badge: "POPRZEDNIA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Wdrożono elastyczny system Automatyzacji i Przepływów (Actions & Flows) zastępujący sztywne zakładki",
       "Dodano interaktywny blok wyzwalacza (Trigger): Komenda czatu/slash, Wysłanie wiadomości, Dołączenie użytkownika (Member Join), Opuszczenie serwera (Member Leave), Kliknięcie przycisku oraz Dodanie reakcji",

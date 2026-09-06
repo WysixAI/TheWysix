@@ -265,6 +265,87 @@ export interface ActionFlow {
   steps: ActionStep[];
 }
 
+export type TicketComponentType = 'buttons' | 'select_menu' | 'both';
+
+export type TicketButtonStyle = 'PRIMARY' | 'SECONDARY' | 'SUCCESS' | 'DANGER' | 'LINK';
+
+export interface TicketButtonConfig {
+  id: string;
+  label: string;
+  emoji?: string;
+  style: TicketButtonStyle;
+  customColor?: string; // Wybarwienie przycisku (np. #5865F2, #57F287, #ED4245, #4E5058, itp.)
+  customId: string;
+  categoryName?: string;
+  channelPrefix?: string;
+  supportRoleName?: string;
+  supportRoleId?: string;
+  ticketWelcomeTitle?: string;
+  ticketWelcomeMessage?: string;
+  ticketWelcomeColor?: string;
+  disabled?: boolean;
+}
+
+export interface TicketSelectOption {
+  id: string;
+  label: string;
+  value: string;
+  description?: string;
+  emoji?: string;
+  colorAccent?: string; // Wybarwienie opcji
+  categoryName?: string;
+  channelPrefix?: string;
+  supportRoleName?: string;
+  supportRoleId?: string;
+  ticketWelcomeMessage?: string;
+}
+
+export interface TicketSelectMenuConfig {
+  customId: string;
+  placeholder: string;
+  colorAccent?: string; // Wybarwienie ramki/tła select menu
+  minValues: number;
+  maxValues: number;
+  options: TicketSelectOption[];
+}
+
+export interface TicketPanelConfig {
+  channelId: string | null;
+  channelName?: string;
+  messageContent?: string;
+  useEmbed: boolean;
+  embed: {
+    title: string;
+    description: string;
+    color: string;
+    authorName?: string;
+    authorIcon?: string;
+    thumbnailUrl?: string;
+    imageUrl?: string;
+    footerText?: string;
+    includeTimestamp?: boolean;
+  };
+  componentType: TicketComponentType;
+  buttons: TicketButtonConfig[];
+  selectMenu: TicketSelectMenuConfig;
+}
+
+export interface TicketSettings {
+  categoryName: string;
+  categoryId?: string;
+  supportRoleName: string;
+  supportRoleId?: string;
+  closeButtonText: string;
+  transcriptEnabled: boolean;
+  deleteDelaySeconds: number;
+}
+
+export interface TicketConfig {
+  enabled: boolean;
+  panel: TicketPanelConfig;
+  settings: TicketSettings;
+}
+
 export interface GuildConfig {
   guildId: string;
   guildName: string;
@@ -273,6 +354,7 @@ export interface GuildConfig {
   welcome?: WelcomeConfig;
   goodbye?: GoodbyeConfig;
   actions?: ActionFlow[];
+  ticket?: TicketConfig;
   embedColor?: string;
   updatedAt: string;
 }
@@ -446,4 +528,133 @@ export function getDefaultActionsConfig(): ActionFlow[] {
     }
   ];
 }
+
+export function getDefaultTicketConfig(): TicketConfig {
+  return {
+    enabled: true,
+    panel: {
+      channelId: null,
+      channelName: 'pomoc',
+      messageContent: '👋 **Potrzebujesz pomocy lub masz sprawę do administracji?** Utwórz prywatny ticket poniżej!',
+      useEmbed: true,
+      embed: {
+        title: '🎫 Centrum Zgłoszeń i Pomocy',
+        description: 'Wybierz odpowiednią opcję poniżej, aby skontaktować się z zespołem wsparcia.\n\n• **🛠️ Pomoc Techniczna** — problemy z serwerem, botem lub kontem\n• **💳 Płatności & VIP** — zamówienia, rangi i darowizny\n• **🚨 Zgłoś Gracza** — naruszenia regulaminu i błędy\n\nNasz zespół odpowiada tak szybko, jak to możliwe!',
+        color: '#5865F2',
+        footerText: 'System Zgłoszeń KitekBot • Kliknij, aby utworzyć zgłoszenie',
+        includeTimestamp: true,
+      },
+      componentType: 'buttons',
+      buttons: [
+        {
+          id: 'btn-support-1',
+          label: 'Pomoc Techniczna',
+          emoji: '🛠️',
+          style: 'PRIMARY',
+          customColor: '#5865F2',
+          customId: 'ticket_create_support',
+          categoryName: 'Pomoc Techniczna',
+          channelPrefix: 'pomoc',
+          supportRoleName: 'Pomocnik',
+          ticketWelcomeTitle: '🛠️ Zgłoszenie: Pomoc Techniczna',
+          ticketWelcomeMessage: 'Witaj {user}! Dziękujemy za utworzenie zgłoszenia. Opisz szczegółowo swój problem, a obsługa serwera wkrótce Ci pomoże.',
+          ticketWelcomeColor: '#5865F2',
+        },
+        {
+          id: 'btn-support-2',
+          label: 'Płatności & VIP',
+          emoji: '💳',
+          style: 'SUCCESS',
+          customColor: '#57F287',
+          customId: 'ticket_create_billing',
+          categoryName: 'Płatności & VIP',
+          channelPrefix: 'platnosci',
+          supportRoleName: 'Administrator',
+          ticketWelcomeTitle: '💳 Zgłoszenie: Płatności & Rangi',
+          ticketWelcomeMessage: 'Witaj {user}! Podaj szczegóły transakcji, nick z gry lub identyfikator zakupu.',
+          ticketWelcomeColor: '#57F287',
+        },
+        {
+          id: 'btn-support-3',
+          label: 'Zgłoś Gracza',
+          emoji: '🚨',
+          style: 'DANGER',
+          customColor: '#ED4245',
+          customId: 'ticket_create_report',
+          categoryName: 'Zgłoszenie Gracza',
+          channelPrefix: 'zgloszenie',
+          supportRoleName: 'Moderator',
+          ticketWelcomeTitle: '🚨 Zgłoszenie: Naruszenie Regulaminu',
+          ticketWelcomeMessage: 'Witaj {user}! Podaj nick zgłaszanego gracza oraz dołącz dowody (zrzuty ekranu, logi, wideo).',
+          ticketWelcomeColor: '#ED4245',
+        },
+      ],
+      selectMenu: {
+        customId: 'ticket_select_category',
+        placeholder: '📂 Wybierz kategorię zgłoszenia z listy...',
+        colorAccent: '#5865F2',
+        minValues: 1,
+        maxValues: 1,
+        options: [
+          {
+            id: 'opt-1',
+            label: 'Pomoc Techniczna',
+            value: 'tech_support',
+            description: 'Problemy z botem, serwerem lub konfiguracją',
+            emoji: '🛠️',
+            colorAccent: '#5865F2',
+            categoryName: 'Pomoc Techniczna',
+            channelPrefix: 'pomoc',
+            supportRoleName: 'Pomocnik',
+            ticketWelcomeMessage: 'Witaj {user}! Opisz szczegółowo problem techniczny.',
+          },
+          {
+            id: 'opt-2',
+            label: 'Płatności & Rangi VIP',
+            value: 'billing',
+            description: 'Pytania dotyczące rang, sklepu i transakcji',
+            emoji: '💳',
+            colorAccent: '#57F287',
+            categoryName: 'Płatności',
+            channelPrefix: 'platnosci',
+            supportRoleName: 'Administrator',
+            ticketWelcomeMessage: 'Witaj {user}! Podaj dane dotyczące zamówienia.',
+          },
+          {
+            id: 'opt-3',
+            label: 'Zgłoszenie Gracza / Skarga',
+            value: 'report',
+            description: 'Naruszenie zasad serwera lub nieodpowiednie zachowanie',
+            emoji: '🚨',
+            colorAccent: '#ED4245',
+            categoryName: 'Zgłoszenia',
+            channelPrefix: 'skarga',
+            supportRoleName: 'Moderator',
+            ticketWelcomeMessage: 'Witaj {user}! Załącz dowody oraz nick zgłaszanego gracza.',
+          },
+          {
+            id: 'opt-4',
+            label: 'Inne Pytanie / Kontakt',
+            value: 'general',
+            description: 'Wszelkie inne zapytania do zarządu serwera',
+            emoji: '💬',
+            colorAccent: '#FEE75C',
+            categoryName: 'Pytania Ogólne',
+            channelPrefix: 'kontakt',
+            supportRoleName: 'Support',
+            ticketWelcomeMessage: 'Witaj {user}! Zadaj swoje pytanie, wkrótce odpowiemy.',
+          },
+        ],
+      },
+    },
+    settings: {
+      categoryName: '🎫・Tickety',
+      supportRoleName: 'Support',
+      closeButtonText: '🔒 Zamknij Ticket',
+      transcriptEnabled: true,
+      deleteDelaySeconds: 5,
+    },
+  };
+}
+
 

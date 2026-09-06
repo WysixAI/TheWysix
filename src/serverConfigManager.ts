@@ -8,9 +8,11 @@ import {
   GoodbyeConfig,
   GuildConfig,
   ActionFlow,
+  TicketConfig,
   getDefaultWelcomeConfig,
   getDefaultGoodbyeConfig,
   getDefaultActionsConfig,
+  getDefaultTicketConfig,
 } from './types/guildConfig';
 
 export type {
@@ -21,8 +23,14 @@ export type {
   GoodbyeConfig,
   GuildConfig,
   ActionFlow,
+  TicketConfig,
 };
-export { getDefaultWelcomeConfig, getDefaultGoodbyeConfig, getDefaultActionsConfig };
+export {
+  getDefaultWelcomeConfig,
+  getDefaultGoodbyeConfig,
+  getDefaultActionsConfig,
+  getDefaultTicketConfig,
+};
 
 const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
 const SERWERY_DIR = isServerless ? path.join('/tmp', 'Serwery') : path.join(process.cwd(), 'Serwery');
@@ -48,6 +56,7 @@ export function getDefaultConfig(guildId: string, guildName?: string): GuildConf
     welcome: getDefaultWelcomeConfig(),
     goodbye: getDefaultGoodbyeConfig(),
     actions: getDefaultActionsConfig(),
+    ticket: getDefaultTicketConfig(),
     embedColor: '#5865F2',
     updatedAt: new Date().toISOString(),
   };
@@ -104,6 +113,33 @@ export function getGuildConfig(guildId: string, guildName?: string): GuildConfig
         ? parsed.actions
         : defaultConf.actions || [];
 
+      const mergedTicket: TicketConfig = {
+        ...defaultConf.ticket!,
+        ...(parsed.ticket || {}),
+        panel: {
+          ...defaultConf.ticket!.panel,
+          ...(parsed.ticket?.panel || {}),
+          embed: {
+            ...defaultConf.ticket!.panel.embed,
+            ...(parsed.ticket?.panel?.embed || {}),
+          },
+          buttons: Array.isArray(parsed.ticket?.panel?.buttons)
+            ? parsed.ticket.panel.buttons
+            : defaultConf.ticket!.panel.buttons,
+          selectMenu: {
+            ...defaultConf.ticket!.panel.selectMenu,
+            ...(parsed.ticket?.panel?.selectMenu || {}),
+            options: Array.isArray(parsed.ticket?.panel?.selectMenu?.options)
+              ? parsed.ticket.panel.selectMenu.options
+              : defaultConf.ticket!.panel.selectMenu.options,
+          },
+        },
+        settings: {
+          ...defaultConf.ticket!.settings,
+          ...(parsed.ticket?.settings || {}),
+        },
+      };
+
       const full: GuildConfig = {
         ...defaultConf,
         ...parsed,
@@ -111,6 +147,7 @@ export function getGuildConfig(guildId: string, guildName?: string): GuildConfig
         welcome: mergedWelcome,
         goodbye: mergedGoodbye,
         actions: mergedActions,
+        ticket: mergedTicket,
       };
       memoryConfigs.set(guildId, full);
       return full;

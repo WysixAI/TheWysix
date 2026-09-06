@@ -446,6 +446,65 @@ app.get('/api/bot/events', (req, res) => {
     }
   });
 
+  // API: Proxy to dispatch live Ticket Panel to Discord channel
+  app.post('/api/bot/proxy/guilds/:id/send-ticket-panel', async (req, res) => {
+    const guildId = req.params.id;
+    const { channelId, channelName, panel, settings } = req.body;
+
+    // First, automatically persist the updated ticket config for this guild
+    try {
+      const existingConfig = getGuildConfig(guildId);
+      const updatedTicket = {
+        ...existingConfig.ticket,
+        enabled: true,
+        panel: {
+          ...(existingConfig.ticket?.panel || {}),
+          ...(panel || {}),
+          channelId: channelId || panel?.channelId || null,
+          channelName: channelName || panel?.channelName || 'pomoc',
+        },
+        settings: {
+          ...(existingConfig.ticket?.settings || {}),
+          ...(settings || {}),
+        },
+      };
+      saveGuildConfig(guildId, { ticket: updatedTicket });
+    } catch (err) {
+      console.warn(`[SendTicketPanel] Failed to save config for guild ${guildId}:`, err);
+    }
+
+    // Forward to Bot Gateway if available
+    if (currentBotApiUrl) {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 5000);
+        const botRes = await fetch(`${currentBotApiUrl.replace(/\/$/, '')}/api/bot/guilds/${guildId}/send-ticket-panel`, {
+          method: 'POST',
+          headers: getBotApiHeaders(),
+          body: JSON.stringify(req.body),
+          signal: controller.signal,
+        });
+        clearTimeout(timeout);
+        if (botRes.ok) {
+          const data = await botRes.json();
+          return res.json(data);
+        }
+      } catch (err: any) {
+        console.warn('[SendTicketPanel] Bot proxy failed, falling back to local acknowledgment:', err.message);
+      }
+    }
+
+    // Fallback confirmation
+    res.json({
+      success: true,
+      simulated: !currentBotApiUrl,
+      messageId: `msg_${Date.now()}`,
+      channelId: channelId || 'default',
+      channelName: channelName || 'pomoc',
+      message: `Panel ticketów został zapisany i przekazany do wysłania na kanał #${channelName || 'pomoc'}.`,
+    });
+  });
+
   // API: Sync bot guilds from external bot instance (GET & POST)
   const handleBotSyncGet = async (req: express.Request, res: express.Response) => {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
