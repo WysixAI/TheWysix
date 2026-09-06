@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { LogIn, LogOut, Plus, ShieldCheck, Crown, ExternalLink, RefreshCw, Loader2, Server, FolderArchive, Settings, CheckCircle2, Sliders, Bot, Radio, Wifi, WifiOff, Copy, Check, AlertCircle, Sparkles, X, Zap } from 'lucide-react';
+import { LogIn, LogOut, Plus, ShieldCheck, Crown, ExternalLink, RefreshCw, Loader2, Server, FolderArchive, Settings, CheckCircle2, Sliders, Bot, Radio, Wifi, WifiOff, Copy, Check, AlertCircle, Sparkles, X, Zap, Ticket } from 'lucide-react';
 import { GuildSettingsModal } from './components/GuildSettingsModal';
 import { DownloadBotView } from './components/DownloadBotView';
 import { BotApiConnectionModal } from './components/BotApiConnectionModal';
 import { MessageStyleBuilder } from './components/MessageStyleBuilder';
-import { ActionsBuilder } from './components/ActionsBuilder';
+import { TicketBuilder } from './components/TicketBuilder';
 
 interface DiscordGuild {
   id: string;
@@ -59,12 +59,43 @@ export default function App() {
     }
   });
 
+  const [showAddServerModal, setShowAddServerModal] = useState<boolean>(false);
+  const [manualServerId, setManualServerId] = useState<string>('');
+  const [manualServerName, setManualServerName] = useState<string>('');
+
   const handleSelectGuild = (guild: { id: string; name: string; icon: string | null }) => {
     setActiveGuild(guild);
     try {
       localStorage.setItem('kitek_active_guild', JSON.stringify(guild));
     } catch {}
-    navigateTo('/actions');
+    navigateTo('/tickets');
+  };
+
+  const handleAddManualServer = () => {
+    const cleanId = manualServerId.trim();
+    if (!cleanId) return;
+    const cleanName = manualServerName.trim() || `Serwer (${cleanId})`;
+
+    setUser((prev) => {
+      if (!prev) return prev;
+      const currentGuilds = prev.guilds || [];
+      if (currentGuilds.some((g) => String(g.id) === cleanId)) {
+        return prev;
+      }
+      const updatedUser = {
+        ...prev,
+        guilds: [...currentGuilds, { id: cleanId, name: cleanName, icon: null, owner: true, permissions: '8' }]
+      };
+      try {
+        localStorage.setItem('kitek_discord_user', JSON.stringify(updatedUser));
+      } catch {}
+      return updatedUser;
+    });
+
+    setManualServerId('');
+    setManualServerName('');
+    setShowAddServerModal(false);
+    fetchBotGuilds();
   };
 
   const handleGoToDashboard = () => {
@@ -663,8 +694,8 @@ export default function App() {
 
   const isDownload = currentPath === '/download' || currentPath === '/pobierz';
   const isLogin = currentPath === '/login';
-  const isActions = (currentPath === '/actions' || currentPath.startsWith('/actions') || currentPath === '/welcome' || currentPath === '/goodbye') && Boolean(activeGuild);
-  const isDashboard = (currentPath === '/dashboard' || (!isDownload && !isLogin && !isActions)) && Boolean(user);
+  const isTickets = (currentPath === '/tickets' || currentPath.startsWith('/tickets') || currentPath === '/ticket' || currentPath === '/actions' || currentPath.startsWith('/actions') || currentPath === '/welcome' || currentPath === '/goodbye') && Boolean(activeGuild);
+  const isDashboard = (currentPath === '/dashboard' || (!isDownload && !isLogin && !isTickets)) && Boolean(user);
 
   const userGuildsCount = user?.guilds?.length || 0;
   const isGuildBotPresent = (guildId: string) => {
@@ -834,25 +865,25 @@ export default function App() {
                           </button>
                         </div>
 
-                        {/* Kategoria: Actions */}
+                        {/* Kategoria: Tickets (Components V2) */}
                         <button
-                          id="category-actions-btn"
-                          onClick={() => navigateTo('/actions')}
+                          id="category-tickets-btn"
+                          onClick={() => navigateTo('/tickets')}
                           className={`w-full py-2.5 px-4 rounded-xl font-extrabold tracking-wide text-sm text-center uppercase transition-all duration-200 flex items-center justify-between cursor-pointer shadow-md ${
-                            isActions
+                            isTickets
                               ? 'bg-[#5865F2] text-white shadow-indigo-950/40 border border-[#7682f7]'
                               : 'bg-[#272831] hover:bg-[#202128] text-neutral-300 hover:text-white border border-[#3b3c47]'
                           }`}
                           style={{ fontFamily: 'Montserrat, sans-serif' }}
                         >
                           <div className="flex items-center gap-2.5">
-                            <Zap className={`w-4 h-4 shrink-0 ${isActions ? 'text-amber-300' : 'text-[#5865F2]'}`} />
-                            <span>Actions</span>
+                            <Ticket className={`w-4 h-4 shrink-0 ${isTickets ? 'text-amber-300' : 'text-[#5865F2]'}`} />
+                            <span>Tickety</span>
                           </div>
                           <span className={`text-[10px] px-2 py-0.5 rounded-full font-black ${
-                            isActions ? 'bg-black/30 text-white' : 'bg-[#5865F2]/20 text-[#8590ff]'
+                            isTickets ? 'bg-black/30 text-white' : 'bg-[#5865F2]/20 text-[#8590ff]'
                           }`}>
-                            Automatyzacje
+                            Components V2
                           </span>
                         </button>
                       </div>
@@ -862,7 +893,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* SEKCJA NA SAMYM DOLE: NICK I LOGO NAD KRESKĄ V2.0.0 KITEKBOT + WYLOGOWANIE */}
+            {/* SEKCJA NA SAMYM DOLE: NICK I LOGO NAD KRESKĄ V5.6.0 KITEKBOT + WYLOGOWANIE */}
             <div className="flex flex-col">
               {user && (
                 <div
@@ -905,9 +936,9 @@ export default function App() {
                 </div>
               )}
 
-              {/* Kreska i napis v5.1.0 KitekBot */}
+              {/* Kreska i napis v5.6.0 KitekBot */}
               <div className="pt-3 border-t border-[#2a2b34] text-center text-xs text-neutral-400 font-medium">
-                v5.1.0 &bull; KitekBot
+                v5.6.0 &bull; KitekBot
               </div>
             </div>
           </div>
@@ -927,10 +958,10 @@ export default function App() {
           {isDownload ? (
             /* WIDOK: POBIERZ PLIKI BOTA */
             <DownloadBotView />
-          ) : isActions && activeGuild ? (
-            /* WIDOK: KREATOR AKCJI (ACTIONS BUILDER) */
+          ) : isTickets && activeGuild ? (
+            /* WIDOK: KREATOR TICKETÓW (TICKET BUILDER COMPONENTS V2) */
             <div className="w-full flex-1 flex flex-col">
-              <ActionsBuilder
+              <TicketBuilder
                 guild={activeGuild}
                 onBackToDashboard={handleGoToDashboard}
               />
@@ -945,22 +976,109 @@ export default function App() {
                     <span>Wybierz serwer</span>
                   </h1>
                   <p className="text-sm text-neutral-300 font-medium mt-1.5">
-                    Kliknij <span className="text-[#5865F2] font-bold">Manage</span> na serwerze z botem lub <span className="text-white font-bold">Dodaj bota</span>, aby go zaprosić.
+                    Kliknij <span className="text-[#5865F2] font-bold">Manage</span> na serwerze z botem lub użyj przycisku <span className="text-emerald-400 font-bold">Dodaj bota</span>.
                   </p>
                 </div>
 
-                <button
-                  onClick={() => {
-                    fetchUserData();
-                    fetchBotGuilds();
-                  }}
-                  title="Odśwież status serwerów"
-                  className="px-4 py-2 bg-[#2d2e36] hover:bg-[#25262e] border border-[#3b3c47] rounded-xl text-xs font-bold text-neutral-300 hover:text-white transition-all flex items-center gap-2 cursor-pointer shadow-sm"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  <span>Odśwież</span>
-                </button>
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  {/* Przycisk: Dodaj bota na serwer (ogólny link OAuth2) */}
+                  <button
+                    id="dashboard-invite-bot-btn"
+                    onClick={() => {
+                      const clientId = '1368350667634376785';
+                      const inviteUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&permissions=8&scope=bot%20applications.commands`;
+                      window.open(inviteUrl, '_blank');
+                    }}
+                    title="Zaproś KitekBota na nowy serwer z uprawnieniami Administratora"
+                    className="px-3.5 py-2 bg-[#5865F2] hover:bg-[#4752C4] active:scale-[0.98] border border-[#7682f7] rounded-xl text-xs font-black text-white transition-all flex items-center gap-2 cursor-pointer shadow-md shadow-indigo-950/30"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Dodaj bota na serwer</span>
+                    <ExternalLink className="w-3 h-3 opacity-70" />
+                  </button>
+
+                  {/* Przycisk: Dodaj serwer po ID */}
+                  <button
+                    id="dashboard-add-server-id-btn"
+                    onClick={() => setShowAddServerModal(true)}
+                    title="Dodaj serwer ręcznie podając jego ID"
+                    className="px-3.5 py-2 bg-[#2d2e36] hover:bg-[#25262e] border border-[#3b3c47] rounded-xl text-xs font-bold text-neutral-200 hover:text-white transition-all flex items-center gap-2 cursor-pointer shadow-sm"
+                  >
+                    <Plus className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Dodaj serwer (ID)</span>
+                  </button>
+
+                  {/* Przycisk: Odśwież status */}
+                  <button
+                    id="dashboard-refresh-servers-btn"
+                    onClick={() => {
+                      fetchUserData();
+                      fetchBotGuilds();
+                    }}
+                    title="Odśwież status serwerów"
+                    className="px-3.5 py-2 bg-[#2d2e36] hover:bg-[#25262e] border border-[#3b3c47] rounded-xl text-xs font-bold text-neutral-300 hover:text-white transition-all flex items-center gap-2 cursor-pointer shadow-sm"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Odśwież</span>
+                  </button>
+                </div>
               </div>
+
+              {/* Modal ręcznego dodawania serwera po ID */}
+              {showAddServerModal && (
+                <div className="p-4 rounded-2xl bg-[#282933] border border-[#5865F2]/50 shadow-xl space-y-3 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-white font-black text-sm">
+                      <Plus className="w-4 h-4 text-[#5865F2]" />
+                      <span>Dodaj serwer ręcznie do listy</span>
+                    </div>
+                    <button
+                      onClick={() => setShowAddServerModal(false)}
+                      className="text-neutral-400 hover:text-white p-1 rounded hover:bg-white/10"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold text-neutral-300 uppercase mb-1">ID Serwera Discord *</label>
+                      <input
+                        type="text"
+                        placeholder="np. 123456789012345678"
+                        value={manualServerId}
+                        onChange={(e) => setManualServerId(e.target.value)}
+                        className="w-full px-3 py-2 bg-[#1f2027] border border-[#3b3c47] rounded-xl text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-[#5865F2]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-neutral-300 uppercase mb-1">Nazwa Serwera (opcjonalnie)</label>
+                      <input
+                        type="text"
+                        placeholder="np. Mój Serwer Społeczności"
+                        value={manualServerName}
+                        onChange={(e) => setManualServerName(e.target.value)}
+                        className="w-full px-3 py-2 bg-[#1f2027] border border-[#3b3c47] rounded-xl text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-[#5865F2]"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2 pt-1">
+                    <button
+                      onClick={() => setShowAddServerModal(false)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold text-neutral-400 hover:text-white"
+                    >
+                      Anuluj
+                    </button>
+                    <button
+                      id="confirm-add-manual-server-btn"
+                      disabled={!manualServerId.trim()}
+                      onClick={handleAddManualServer}
+                      className="px-4 py-1.5 bg-[#5865F2] hover:bg-[#4752C4] disabled:opacity-50 text-white rounded-lg text-xs font-black uppercase tracking-wider"
+                    >
+                      Dodaj serwer
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {user.guilds && user.guilds.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">

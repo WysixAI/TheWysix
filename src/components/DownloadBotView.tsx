@@ -12,10 +12,24 @@ interface ChangeLogEntry {
 
 const BOT_CHANGELOG: ChangeLogEntry[] = [
   {
+    version: "v5.6.0",
+    date: "Dzisiaj, 06.09.2026",
+    badge: "NAJNOWSZA (v5.6.0)",
+    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    changes: [
+      "Wdrożono pełną integrację modułu Ticket (Components V2) z panelem nawigacyjnym: natychmiastowe przejście do konfiguracji ticketów po kliknięciu 'Manage' na serwerze",
+      "Dodano przycisk 'Dodaj bota na serwer' na Dashboardzie umożliwiający natychmiastowe zaproszenie bota na dowolny serwer Discord z uprawnieniami Administratora",
+      "Wprowadzono modal 'Dodaj serwer (ID)' pozwalający dodać dowolny serwer Discord bezpośrednio po jego identyfikatorze",
+      "Dwustronna synchronizacja stanu bota w czasie rzeczywistym: natychmiastowa zmiana przycisku na 'Manage' po dodaniu bota i powrót do 'Dodaj bota' po opuszczeniu serwera",
+      "Optymalizacja edytora Components V2: szybkie dodawanie przycisków i opcji rozwijanych z bezpośrednim podglądem na żywo Discorda",
+      "Zaktualizowano paczkę bota, manifest package.json oraz wersję bota w Discord Gateway i REST API"
+    ]
+  },
+  {
     version: "v5.5.0",
     date: "Dzisiaj, 06.09.2026",
-    badge: "NAJNOWSZA (v5.5.0)",
-    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    badge: "POPRZEDNIA",
+    badgeColor: "bg-[#5865F2]/20 text-indigo-300 border-[#5865F2]/40",
     changes: [
       "Wdrożono zaawansowany moduł Zgłoszeń Ticket (Components V2) — pełna swoboda tworzenia paneli pomocy i zgłoszeń",
       "Dodano selektor kanału docelowego oraz przycisk 'Send (Wyślij)', który natychmiast wysyła gotowy panel ticketów na Discorda",

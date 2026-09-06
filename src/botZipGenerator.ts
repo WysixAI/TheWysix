@@ -11,8 +11,8 @@ export function generateBotZip(
   // 1. package.json
   const packageJson = {
     name: "kitek-bot",
-    version: "5.5.0",
-    description: "KitekBot Discord Bot v5.5.0 — zaawansowany system zgłoszeń Ticket (Components V2) z możliwością wysłania panelu na wskazany kanał Discord oraz nielimitowanym edytorem komponentów (Buttons & Select Menu)",
+    version: "5.6.0",
+    description: "KitekBot Discord Bot v5.6.0 — zaawansowany system zgłoszeń Ticket (Components V2) z możliwością wysłania panelu na wskazany kanał Discord oraz nielimitowanym edytorem komponentów (Buttons & Select Menu)",
     main: "index.js",
     scripts: {
       prestart: "npm install --no-audit --prefer-offline",
@@ -28,7 +28,7 @@ export function generateBotZip(
     devDependencies: {
       "nodemon": "^3.1.7"
     },
-    keywords: ["discord", "bot", "kitekbot", "ticket-system", "components-v2", "button-tickets", "select-menu-tickets", "v5.5.0"],
+    keywords: ["discord", "bot", "kitekbot", "ticket-system", "components-v2", "button-tickets", "select-menu-tickets", "v5.6.0"],
     author: "KitekBot Team",
     license: "ISC"
   };
@@ -647,7 +647,7 @@ export function generateBotZip(
     "  });",
     "  console.log('=======================================================\\n');",
     "",
-    "  botUser.setActivity('Dashboard v5.5.0 | Ticket System Components V2', { type: ActivityType.Playing });",
+    "  botUser.setActivity('Dashboard v5.6.0 | Ticket System Components V2', { type: ActivityType.Playing });",
     "",
     "  const rawToken = (process.env.DISCORD_TOKEN || '').replace(/[\"']/g, '').replace(/^Bot\\s+/i, '').trim();",
     "  const clientId = (process.env.DISCORD_CLIENT_ID || '1368350667634376785').trim();",
@@ -1057,14 +1057,14 @@ export function generateBotZip(
     "",
     "  if (commandName === 'pomoc') {",
     "    const embed = new EmbedBuilder()",
-    "      .setTitle('🤖 KitekBot v5.5.0 - Panel Pomocy')",
+    "      .setTitle('🤖 KitekBot v5.6.0 - Panel Pomocy')",
     "      .setDescription('Zarządzaj zaawansowanym systemem zgłoszeń Ticket (Components V2) w **Panelu Web Dashboard**!')",
     "      .addFields(",
     "        { name: '🌐 Web Dashboard', value: process.env.DASHBOARD_URL || '" + dashboardUrl + "', inline: false },",
     "        { name: '📋 Komendy', value: '`/pomoc` - Informacje o bocie\\n`/ping` - Sprawdza opóźnienie\\n`/stan` - Stan systemu ticketów i serwera', inline: false }",
     "      )",
     "      .setColor(config && config.embedColor ? config.embedColor : '#5865F2')",
-    "      .setFooter({ text: 'KitekBot v5.5.0 • Ticket System Components V2' });",
+    "      .setFooter({ text: 'KitekBot v5.6.0 • Ticket System Components V2' });",
     "    await interaction.reply({ embeds: [embed] });",
     "  } else if (commandName === 'ping') {",
     "    await interaction.reply({ content: '🏓 Pong! Opóźnienie bota wynosi: **' + client.ws.ping + 'ms**', ephemeral: true });",
@@ -1332,7 +1332,7 @@ export function generateBotZip(
     "});",
     "",
     "app.listen(API_PORT, '0.0.0.0', () => {",
-    "  console.log('🚀 [REST API v5.5.0] Serwer REST API bota nasłuchuje na porcie: ' + API_PORT);",
+    "  console.log('🚀 [REST API v5.6.0] Serwer REST API bota nasłuchuje na porcie: ' + API_PORT);",
     "  console.log('🔗 [REST API] Endpointy: /api/status | /api/bot/guilds | /api/guilds/:id | /api/bot/guilds/:id/channels | /api/bot/guilds/:id/send-ticket-panel');",
     "});",
     "",
